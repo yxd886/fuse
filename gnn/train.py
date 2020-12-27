@@ -47,28 +47,20 @@ with tf.device("/gpu:0"):
             save(records, "records")
 
         op_feats     = tf.convert_to_tensor(record["op_feats"], dtype=tf.float32)
-        device_feats = tf.convert_to_tensor(record["device_feats"], dtype=tf.float32)
         tensor_feats = tf.convert_to_tensor(record["tensor_feats"], dtype=tf.float32)
-        link_feats   = tf.convert_to_tensor(record["link_feats"], dtype=tf.float32)
-        place_feats  = tf.convert_to_tensor(record["place_feats"], dtype=tf.float32)
         model.set_graph(record["graph"])
 
-        # search
-        if epoch > 100 and epoch % 50 == 0:
-            nodelogit, nccllogit = model([op_feats, device_feats, tensor_feats, link_feats, place_feats], training=False)
-            nodep = tf.nn.softmax(nodelogit).numpy()
-            ncclp = tf.math.sigmoid(nccllogit).numpy()
-            loss_env, nodemask, ncclmask = search(record, nodep, ncclp)
-            if loss_env < record['elites'][-1][0] * 1.05:
-                record['elites'].append((loss_env, nodemask, ncclmask))
-                record["elites"] = record["elites"][-4:]
 
-            info(record_id, loss_env, [ x for x, _, _ in record['reference'] ])
+
+        rank = model([op_feats, tensor_feats], training=False)
+        rank = tf.math.reduce_mean(rank)
+        rank = 1000*tf.math.sigmoid(rank).numpy()
+
 
         # learn
         with tf.GradientTape() as tape:
             tape.watch(model.trainable_weights)
-            nodelogit, nccllogit = model([op_feats, device_feats, tensor_feats, link_feats, place_feats], training=True)
+            nodelogit, nccllogit = model([op_feats, tensor_feats], training=True)
 
             # info(tf.nn.softmax(nodelogit).numpy())
             # info(nodelogit.numpy())
