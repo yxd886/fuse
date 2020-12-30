@@ -126,11 +126,9 @@ def gen_data(gdef, prof_data, batchsize, devices, intra=2810, inter=2810):
             prof_data_combined[key][i] = times[0]
 
     g = dgl.heterograph({
-        ('device', 'link', 'device'): edge_link,
         ('op', 'prev', 'op'): edge_prev,
         ('op', 'succ', 'op'): edge_succ,
-        ('op', 'place', 'device'): edge_place,
-        ('device', 'serve', 'op'): edge_serve
+        ('fuseop', 'fuse', 'op'): edge_place,
     })
 
     return {

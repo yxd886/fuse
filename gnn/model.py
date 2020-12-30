@@ -67,9 +67,7 @@ class Model(tf.keras.Model):
         edge_feats = {
             "prev": tensor_feats,
             "succ": tensor_feats,
-            "duplicate_fuse": tensor_feats,
-            "no_duplicate_fuse": tensor_feats,
-            "tensor_fuse":tensor_feats
+            "fuse":tensor_feats
         }
         edge_feats = { etype: self.edge_trans[etype](edge_feats[etype]) for etype in all_etypes }
 
