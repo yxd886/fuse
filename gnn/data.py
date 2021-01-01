@@ -7,6 +7,68 @@ import itertools
 import networkx as nx
 from utils import groupby, car, cadr, cdr, info, load
 
+
+
+
+def gen_data(hlo_def):
+    #features
+    instruction_in_computation_link = [], []
+    instruction_call_computation_link = [], []
+    instruction_edge_prev = [],[]
+    instruction_edge_succ = [],[]
+
+    #dicts
+    id_instruction_dict = {}
+    instructionName_index_dict= {}
+    instructionName_instruction_dict= {}
+    id_computation_dict= {}
+    computationName_index_dict= {}
+    computationName_computation= {}
+
+
+    instruction_index=0
+    for computation_index, computation in enumerate(hlo_def.computations):
+        id_computation_dict[computation.id] = computation
+        computationName_index_dict[computation.name]=computation_index
+        computationName_computation[computation.name] = computation
+        for instruction in (computation.instructions):
+            id_instruction_dict[instruction.id] = instruction
+            instructionName_index_dict[instruction.name] = instruction_index
+            instructionName_instruction_dict[instruction.name]=instruction
+
+            # complete instruction_in_computation_link
+            instruction_in_computation_link[0].append(instruction_index)
+            instruction_in_computation_link[1].append(computation_index)
+            instruction_index+=1
+
+
+    tensor_sizes = np.zeros((len(id_instruction_dict), len(id_instruction_dict)))
+
+
+    for computation_index, computation in enumerate(hlo_def.computations):
+        for instruction in (computation.instructions):
+            # find oprand of this instruction
+            for operand_id in instruction.operand_ids:
+                instruction_edge_prev[0].append(instructionName_index_dict[instruction.name])
+                instruction_edge_prev[1].append(instructionName_index_dict[id_instruction_dict[operand_id].name])
+                instruction_edge_succ[0].append(instructionName_index_dict[id_instruction_dict[operand_id].name])
+                instruction_edge_succ[1].append(instructionName_index_dict[instruction.name])
+
+            for called_computation_id in instruction.called_computation_ids:
+                instruction_call_computation_link[0].append(instructionName_index_dict[instruction.name])
+                instruction_call_computation_link[1].append(computationName_index_dict[id_computation_dict[called_computation_id].name])
+
+
+
+    g = dgl.heterograph({
+        ('instruction', 'in', 'computation'): instruction_in_computation_link,
+        ('instruction', 'prev', 'instruction'): instruction_edge_prev,
+        ('instruction', 'succ', 'instruction'): instruction_edge_succ,
+        ('instruction', 'call', 'computation'): instruction_call_computation_link,
+    })
+
+    return g
+
 def gen_data(gdef, prof_data, batchsize, devices, intra=2810, inter=2810):
     edge_link = [], []
     link_feats = []
@@ -126,9 +188,10 @@ def gen_data(gdef, prof_data, batchsize, devices, intra=2810, inter=2810):
             prof_data_combined[key][i] = times[0]
 
     g = dgl.heterograph({
-        ('op', 'prev', 'op'): edge_prev,
-        ('op', 'succ', 'op'): edge_succ,
-        ('fuseop', 'fuse', 'op'): edge_place,
+        ('instruction', 'in', 'computation'): edge_link,
+        ('instruction', 'prev', 'instruction'): edge_prev,
+        ('instruction', 'succ', 'instruction'): edge_succ,
+        ('instruction', 'call', 'computation'): edge_place,
     })
 
     return {
