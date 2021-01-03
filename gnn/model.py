@@ -48,8 +48,8 @@ class Model(tf.keras.Model):
         node_hidden = 64
         edge_hidden = 8
 
-        self.op_trans = tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu)
-        self.device_trans = tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu)
+        self.instruction_trans = tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu)
+        self.computation_trans = tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu)
         self.final_trans = tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu)
         self.edge_trans = { etype: tf.keras.layers.Dense(edge_hidden, activation=tf.nn.elu) for etype in all_etypes }
 
@@ -62,9 +62,6 @@ class Model(tf.keras.Model):
             GConv(node_hidden, tf.identity)
         ]
 
-        self.final_place = tf.keras.layers.Dense(3, activation=None)
-        self.final_nccl = tf.keras.layers.Dense(1, activation=None)
-        self.final_ps = tf.keras.layers.Dense(1, activation=None)
         self.final_rank = tf.keras.layers.Dense(1, activation=None)
 
 
@@ -73,11 +70,11 @@ class Model(tf.keras.Model):
         self.graph = graph
 
     def call(self, inputs):
-        [instruction_feats, computation_feats,final_feats, instruction_edge_feats, call_computation_edge_feats, in_computation_edge_feats] = inputs
+        [instruction_feats, computation_feats,final_feats, instruction_edge_feats, call_computation_edge_feats, in_computation_edge_feats,to_final_edge_feats] = inputs
 
-        instruction_feats = self.op_trans(instruction_feats)
-        computation_feats = self.device_trans(computation_feats)
-        final_feats = self.device_trans(final_feats)
+        instruction_feats = self.instruction_trans(instruction_feats)
+        computation_feats = self.computation_trans(computation_feats)
+        final_feats = self.final_trans(final_feats)
 
 
         edge_feats = {
@@ -85,6 +82,7 @@ class Model(tf.keras.Model):
             "prev": instruction_edge_feats,
             "succ": instruction_edge_feats,
             "in_computation_edge_feats": in_computation_edge_feats,
+            "to_final_edge_feats":to_final_edge_feats
         }
         edge_feats = { etype: self.edge_trans[etype](edge_feats[etype]) for etype in all_etypes }
 
