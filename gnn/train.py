@@ -4,8 +4,8 @@ import tensorflow as tf
 
 from data import get_all_data
 from model import Model
-from environment import sample, evaluate, base_strategies, f
-from search import search
+import sys
+sys.path.append("../")
 from utils import save, load, info
 
 try:

@@ -5,8 +5,10 @@ import pickle
 import math
 import itertools
 import networkx as nx
+import sys
+sys.path.append("../")
 from utils import groupby, car, cadr, cdr, info, load, save
-from protobuf import hlo_pb2
+import tensorflow.compiler.xla.service.hlo_pb2 as hlo_pb2
 
 
 opcode_index_dict = load("opcode_index_dict.pkl")
