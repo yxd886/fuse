@@ -99,11 +99,11 @@ def gen_data(hlo_def):
 
 
     g = dgl.heterograph({
-        ('instruction', 'in', 'computation'): instruction_in_computation_link,
+        ('instruction', 'in_computation_edge_feats', 'computation'): instruction_in_computation_link,
         ('instruction', 'prev', 'instruction'): instruction_edge_prev,
         ('instruction', 'succ', 'instruction'): instruction_edge_succ,
-        ('instruction', 'call', 'computation'): instruction_call_computation_link,
-        ('computation', 'to', 'final'): computation_to_final
+        ('instruction', 'call_computation_edge_feats', 'computation'): instruction_call_computation_link,
+        ('computation', 'to_final_edge_feats', 'final'): computation_to_final
 
     })
 

@@ -3,7 +3,7 @@ import dgl.function as fn
 import numpy as np
 from utils import info, positional_encoding
 
-all_etypes = ["in", "prev", "succ", "call", "to"]
+all_etypes = ["in_computation_edge_feats", "prev", "succ", "call_computation_edge_feats", "to_final_edge_feats"]
 
 class GConv(tf.keras.layers.Layer):
     '''Graph Conv layer that concats the edge features before sending message'''
