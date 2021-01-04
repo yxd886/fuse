@@ -71,7 +71,7 @@ with tf.device("/gpu:0"):
             loss = 0
             for i in range(len(ranks)):
                 for j in range(len(ranks)):
-                        loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.log(1+tf.math.exp(ranks[j]-ranks[i])), 0)
+                        loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.log(1+tf.math.exp(ranks[j]-ranks[i])), lambda: 0)
 
             if L2_regularization_factor > 0:
                 for weight in model.trainable_weights:
