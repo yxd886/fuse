@@ -77,7 +77,8 @@ with tf.device("/gpu:0"):
             if L2_regularization_factor > 0:
                 for weight in model.trainable_weights:
                     loss += L2_regularization_factor * tf.nn.l2_loss(weight)
-
+            info("real_time:",execution_times)
+            info("predict_rank:",ranks)
             info(record_ids, loss.numpy())
 
             grads = tape.gradient(loss, model.trainable_weights)
