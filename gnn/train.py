@@ -65,7 +65,6 @@ with tf.device("/gpu:0"):
                 model.set_graph(graphs[i])
                 ranklogit = model(inputs[i], training=True)
                 ranklogit = tf.math.reduce_mean(ranklogit)
-                ranklogit = 1000 * tf.math.sigmoid(ranklogit)
                 ranks.append(ranklogit)
 
             loss = 0
@@ -80,7 +79,7 @@ with tf.device("/gpu:0"):
                 for weight in model.trainable_weights:
                     loss += L2_regularization_factor * tf.nn.l2_loss(weight)
             info("real_time:",execution_times)
-            info("predict_rank:",ranks)
+            info("predict_rank:",[rank.numpy() for rank in ranks])
             info(record_ids, loss.numpy())
 
             grads = tape.gradient(loss, model.trainable_weights)
