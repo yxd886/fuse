@@ -5,6 +5,7 @@ import pickle
 import math
 import itertools
 import networkx as nx
+import os
 import sys
 sys.path.append("../")
 from utils import groupby, car, cadr, cdr, info, load, save
@@ -143,86 +144,41 @@ def one_hot_opcode(opcode):
 
 
 def get_all_data():
-    models = []
-    for m in ("vgg", "resnet", "inception", "transformer", "bert"): # "mobilenet", "nasnet"
-        agg_prof_data = {}
-        gdef, batchsize = None, None
-        for gtype in ('1080ti', 'v100'):
-            gdef, prof_data, _, batchsize = load("{}_{}.pickle".format(m, gtype))
-            agg_prof_data[gtype] = prof_data
-        models.append((gdef, agg_prof_data, batchsize))
+    path_base = "/home/net/xiaodong/trax/trax/hlo_module/{}/{}_op_fusion_level_{}_tensor_fusion_threshold_{}/{}"
 
-    # topos1 = [gen_topo([
-    #     ("/job:worker/replica:0/task:0/device:GPU:0", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:1", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:2", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:3", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:4", 2, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:5", 2, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:6", 2, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:7", 2, 6<<30),
-    # ], intra=bandwidth) for bandwidth in (4000, 40000)]
-    # topos2 = [gen_topo([
-    #     ("/job:worker/replica:0/task:0/device:GPU:0", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:1", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:2", 2, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:3", 2, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:4", 3, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:5", 3, 6<<30),
-    # ], intra=bandwidth) for bandwidth in (4000, 20000, 80000)]
-    # topos3 = [gen_topo([
-    #     ("/job:worker/replica:0/task:0/device:GPU:0", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:1", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:2", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:0/device:GPU:3", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:1/device:GPU:0", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:1/device:GPU:1", 1, 6<<30),
-    # ], intra=bandwidth, inter=1000) for bandwidth in (8000, 80000)]
-    # topos4 = [gen_topo([
-    #     ("/job:worker/replica:0/task:0/device:GPU:0", 2, 6<<30),
-    #     ("/job:worker/replica:0/task:1/device:GPU:0", 1, 10<<30),
-    #     ("/job:worker/replica:0/task:1/device:GPU:1", 1, 10<<30),
-    # ], intra=8000, inter=2810)]
-    # topos5 = [gen_topo([
-    #     ("/job:worker/replica:0/task:0/device:GPU:0", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:1/device:GPU:0", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:1/device:GPU:1", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:2/device:GPU:0", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:2/device:GPU:1", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:2/device:GPU:2", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:3/device:GPU:0", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:3/device:GPU:1", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:3/device:GPU:2", 1, 6<<30),
-    #     ("/job:worker/replica:0/task:3/device:GPU:3", 1, 6<<30),
-    # ], intra=8000, inter=2810)]
-    topos6 = [([
-        ("/job:worker/replica:0/task:0/device:GPU:0", '1080ti', 6<<30),
-        ("/job:worker/replica:0/task:0/device:GPU:1", '1080ti', 6<<30),
-        ("/job:worker/replica:0/task:1/device:GPU:0", '1080ti', 6<<30),
-        ("/job:worker/replica:0/task:1/device:GPU:1", '1080ti', 6<<30),
-        ("/job:worker/replica:0/task:2/device:GPU:0", 'v100', 8<<30),
-        ("/job:worker/replica:0/task:2/device:GPU:1", 'v100', 8<<30),
-        ("/job:worker/replica:0/task:2/device:GPU:2", 'v100', 8<<30),
-        ("/job:worker/replica:0/task:2/device:GPU:3", 'v100', 8<<30),
-    ], 8000, 2810)]
-    topos7 = [([
-        ("/job:worker/replica:0/task:0/device:GPU:0", '1080ti', 6<<30),
-        ("/job:worker/replica:0/task:0/device:GPU:1", '1080ti', 6<<30),
-        ("/job:worker/replica:0/task:1/device:GPU:0", '1080ti', 6<<30),
-        ("/job:worker/replica:0/task:2/device:GPU:0", 'v100', 8<<30),
-        ("/job:worker/replica:0/task:2/device:GPU:1", 'v100', 8<<30),
-    ], 8000, 2810)]
+    module_name = "training.model_0061.after_all_reduce_combiner.hlo.pb"
+    time_name = "per_iteration_time.txt"
+    worker_num  = 6
+    model_name = "transformer"
+    op_levels  = [0,1,2,3]
+    tensor_thresholds = [0,30,60,90,120,240,10000000]
+    training_datas = []
+    for op_level in op_levels:
+        for tensor_threshold in tensor_thresholds:
+            proto_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,module_name)
+            time_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,time_name)
 
-    return [gen_data(gdef, prof_data, batchsize, devices, intra, inter) for gdef, prof_data, batchsize in models for devices, intra, inter in topos6 + topos7]
+            if os.path.exists(proto_path) and os.path.exists(time_path):
+                with open(proto_path, "rb") as f:
+                    hlo_proto = hlo_pb2.HloProto()
+                    hlo_proto.ParseFromString(f.read())
+                    hlo_module = hlo_proto.hlo_module
+                    res = gen_data(hlo_module)
+                with open(time_path, "r") as f:
+                    first_line = f.readline()
+                    for last_line in f:
+                        pass
+                    time  = float(last_line.split(":")[-1])
+                    res["execution_time"] = time
+                training_datas.append(res)
+    return training_datas
 
 
-
-files = ["3_60_after_optimizations.hlo"]
-
-
-for file in files:
-    with open(file+".pb","rb") as f:
-        hlo_module = hlo_pb2.HloProto()
-        hlo_module.ParseFromString(f.read())
-        res = gen_data(hlo_module.hlo_module)
-        print(res)
+if __name__=="__main__":
+    files = ["3_60_after_optimizations.hlo"]
+    for file in files:
+        with open(file+".pb","rb") as f:
+            hlo_module = hlo_pb2.HloProto()
+            hlo_module.ParseFromString(f.read())
+            res = gen_data(hlo_module.hlo_module)
+            print(res)
