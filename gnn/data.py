@@ -64,7 +64,7 @@ def gen_data(hlo_def):
     computation_feats = []  # instructions number, parameters number
     final_feats = [] #nums of computations
 
-    final_feats.append([hlo_def.computations])
+    final_feats.append([len(hlo_def.computations)])
     for computation_index, computation in enumerate(hlo_def.computations):
         computation_feats.append([len(computation.instructions)]+[len(computation.program_shape.parameters)])        #computation features
         to_final_edge_feats.append([1])
