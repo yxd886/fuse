@@ -8,6 +8,18 @@ import sys
 sys.path.append("../")
 from utils import save, load, info
 
+
+
+
+def compare(pred,real):
+    sort_pred = sorted(pred)
+    sort_real = sorted(real)
+    pred_index = [sort_pred.index(item) for item in pred]
+    real_index = [sort_real.index(item) for item in real]
+    info("real rank index:",real_index)
+    info("pred rank index:",pred_index)
+    return str(pred_index)==str(real_index)
+
 try:
     records = load("records")
     info("load saved records")
@@ -79,11 +91,18 @@ with tf.device("/gpu:0"):
                 for weight in model.trainable_weights:
                     loss += L2_regularization_factor * tf.nn.l2_loss(weight)
             info("real_time:",execution_times)
-            info("predict_rank:",[rank.numpy() for rank in ranks])
+            rank_numpy = [rank.numpy() for rank in ranks]
+            info("predict_rank:",rank_numpy)
             info(record_ids, loss.numpy())
+            if compare(rank_numpy,execution_times):
+                info("prediction success!")
+            else:
+                info("prediction fail!")
+
+
 
             grads = tape.gradient(loss, model.trainable_weights)
-            info([tf.reduce_mean(tf.abs(grad)).numpy() for grad in grads])
+            #info([tf.reduce_mean(tf.abs(grad)).numpy() for grad in grads])
             optimizer.apply_gradients(zip(grads, model.trainable_weights))
 
         # checkpoint
