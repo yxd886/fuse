@@ -146,7 +146,7 @@ def one_hot_opcode(opcode):
 def get_all_data():
     path_base = "/home/net/xiaodong/trax/trax/hlo_module/{}/{}_op_fusion_level_{}_tensor_fusion_threshold_{}/{}"
 
-    module_name = "training.model_0061.after_all_reduce_combiner.hlo.pb"
+    module_name = "training.module_0061.after_all_reduce_combiner.hlo.pb"
     time_name = "per_iteration_time.txt"
     worker_num  = 6
     model_name = "transformer"
