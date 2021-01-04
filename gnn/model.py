@@ -34,7 +34,7 @@ class GConv(tf.keras.layers.Layer):
                 instruction_dst.append(g.dstdata['o'])
             elif dtype == 'computation':
                 computation_dst.append(g.dstdata['o'])
-            elif stype == "final":
+            elif dtype == "final":
                 final_dst.append(g.dstdata['o'])
         instruction_dst = tf.math.add_n(instruction_dst) / len(instruction_dst)
         computation_dst = tf.math.add_n(computation_dst) / len(computation_dst)
@@ -66,8 +66,8 @@ class Model(tf.keras.Model):
 
 
     def set_graph(self, graph):
-        # self.graph = graph.to('gpu:0')
-        self.graph = graph
+        self.graph = graph.to('gpu:0')
+        #self.graph = graph
 
     def call(self, inputs):
         [instruction_feats, computation_feats,final_feats, instruction_edge_feats, call_computation_edge_feats, in_computation_edge_feats,to_final_edge_feats] = inputs
