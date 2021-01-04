@@ -65,15 +65,17 @@ with tf.device("/gpu:0"):
                 model.set_graph(graphs[i])
                 ranklogit = model(inputs[i], training=True)
                 ranklogit = tf.math.reduce_mean(ranklogit)
-                rank = 1000 * tf.math.sigmoid(ranklogit).numpy()
-                ranks.append(rank)
+                ranklogit = 1000 * tf.math.sigmoid(ranklogit)
+                ranks.append(ranklogit)
 
             loss = 0
             for i in range(len(ranks)):
                 for j in range(len(ranks)):
-                        loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.log(1+tf.math.exp(ranks[j]-ranks[i])), lambda: 0)
+                    #loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.log(1+tf.math.exp(ranks[j]-ranks[i])), lambda: 0)
+                    loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.reduce_logsumexp([0, ranks[j] - ranks[i]]), lambda: 0)
+
             loss = tf.dtypes.cast(loss, tf.float32)
-            print(loss.numpy())
+            info("rank loss:",loss.numpy())
             if L2_regularization_factor > 0:
                 for weight in model.trainable_weights:
                     loss += L2_regularization_factor * tf.nn.l2_loss(weight)
@@ -82,7 +84,7 @@ with tf.device("/gpu:0"):
             info(record_ids, loss.numpy())
 
             grads = tape.gradient(loss, model.trainable_weights)
-            # info([tf.reduce_mean(tf.abs(grad)).numpy() for grad in grads])
+            info([tf.reduce_mean(tf.abs(grad)).numpy() for grad in grads])
             optimizer.apply_gradients(zip(grads, model.trainable_weights))
 
         # checkpoint
