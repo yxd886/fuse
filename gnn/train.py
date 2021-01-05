@@ -39,19 +39,20 @@ with tf.device("/gpu:0"):
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=.00004, clipnorm=6)
     L2_regularization_factor = .00001
+    sample_size = 3
 
-    for epoch in range(20000):
+    for epoch in range(20000000):
 
         inputs = []
         graphs = []
         record_ids=[]
         execution_times=[]
-        while len(record_ids)<3:
+        while len(record_ids)<sample_size:
             record_id = np.random.randint(len(records))
             if record_id not in record_ids:
                 record_ids.append(record_id)
 
-        for i in range(3):     # random sample 3 records
+        for i in range(sample_size):     # random sample 3 records
             record_id = record_ids[i]
             record = records[record_id]
             instruction_feats     = tf.convert_to_tensor(record["instruction_feats"], dtype=tf.float32)
@@ -72,7 +73,7 @@ with tf.device("/gpu:0"):
         with tf.GradientTape() as tape:
             tape.watch(model.trainable_weights)
             ranks = []
-            for i in range(3):
+            for i in range(sample_size):
 
                 model.set_graph(graphs[i])
                 ranklogit = model(inputs[i], training=True)
