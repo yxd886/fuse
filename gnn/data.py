@@ -174,6 +174,36 @@ def get_all_data():
     return training_datas
 
 
+def get_test_data():
+    path_base = "/home/net/xiaodong/trax/trax/hlo_module/{}/{}_op_fusion_level_{}_tensor_fusion_threshold_{}/{}"
+
+    module_name = "training.module_0061.after_all_reduce_combiner.hlo.pb"
+    time_name = "per_iteration_time.txt"
+    worker_num  = 6
+    model_name = "transformer"
+    op_levels  = [0,1,2,3]
+    tensor_thresholds = [20,40,80,160,320,640]
+    training_datas = []
+    for op_level in op_levels:
+        for tensor_threshold in tensor_thresholds:
+            proto_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,module_name)
+            time_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,time_name)
+
+            if os.path.exists(proto_path) and os.path.exists(time_path):
+                with open(proto_path, "rb") as f:
+                    hlo_proto = hlo_pb2.HloProto()
+                    hlo_proto.ParseFromString(f.read())
+                    hlo_module = hlo_proto.hlo_module
+                    res = gen_data(hlo_module)
+                with open(time_path, "r") as f:
+                    first_line = f.readline()
+                    for last_line in f:
+                        pass
+                    time  = float(last_line.split(":")[-1])
+                    res["execution_time"] = time
+                training_datas.append(res)
+    return training_datas
+
 if __name__=="__main__":
     files = ["3_60_after_optimizations.hlo"]
     for file in files:
