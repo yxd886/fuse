@@ -151,7 +151,7 @@ def get_all_data():
     worker_num  = 6
     model_name = "transformer"
     op_levels  = [0,1,2,3]
-    tensor_thresholds = [0,30,60,90,120,240,10000000]
+    tensor_thresholds = [0,20,30,40,60,80,90,120,240,10000000]
     training_datas = []
     for op_level in op_levels:
         for tensor_threshold in tensor_thresholds:
@@ -182,7 +182,7 @@ def get_test_data():
     worker_num  = 6
     model_name = "transformer"
     op_levels  = [0,1,2,3]
-    tensor_thresholds = [20,40,80,160,320,640]
+    tensor_thresholds = [160,320,640]
     training_datas = []
     for op_level in op_levels:
         for tensor_threshold in tensor_thresholds:

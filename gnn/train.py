@@ -48,9 +48,11 @@ with tf.device("/gpu:0"):
         info("no saved weight")
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=.00004, clipnorm=6)
-    L2_regularization_factor = .00001
-    sample_size = 3
+    L2_regularization_factor = .0001
+    sample_size = 6
     train = True
+    if train==False:
+        sample_size = 2
 
     test_counter = 0
 
@@ -159,14 +161,14 @@ with tf.device("/gpu:0"):
                 ranklogit = tf.math.reduce_mean(ranklogit)
                 ranks.append(ranklogit)
 
+            info("chosen sample index:",test_ids)
             info("real_time:", execution_times)
             rank_numpy = [rank.numpy() for rank in ranks]
             info("predict_rank:", rank_numpy)
-            info(record_ids, loss.numpy())
             if compare(rank_numpy, execution_times):
                 info("prediction success!")
                 test_counter+=1
             else:
                 info("prediction fail!")
-            print("accuracy: {}/{} = {}".format(test_counter,epoch,test_counter/epoch))
+            print("accuracy: {}/{} = {}".format(test_counter,epoch+1,test_counter/(epoch+1)))
 
