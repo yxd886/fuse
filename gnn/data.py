@@ -171,6 +171,27 @@ def get_all_data():
                     time  = float(last_line.split(":")[-1])
                     res["execution_time"] = time
                 training_datas.append(res)
+    op_levels = [888]
+    tensor_thresholds = range(150)
+    for op_level in op_levels:
+        for tensor_threshold in tensor_thresholds:
+            proto_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,module_name)
+            time_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,time_name)
+
+            if os.path.exists(proto_path) and os.path.exists(time_path):
+                with open(proto_path, "rb") as f:
+                    hlo_proto = hlo_pb2.HloProto()
+                    hlo_proto.ParseFromString(f.read())
+                    hlo_module = hlo_proto.hlo_module
+                    res = gen_data(hlo_module)
+                with open(time_path, "r") as f:
+                    first_line = f.readline()
+                    for last_line in f:
+                        pass
+                    time  = float(last_line.split(":")[-1])
+                    res["execution_time"] = time
+                training_datas.append(res)
+
     return training_datas
 
 
@@ -184,6 +205,26 @@ def get_test_data():
     op_levels  = [0,1,2,3]
     tensor_thresholds = [160,180,320,480,640,1000,1280]
     training_datas = []
+    for op_level in op_levels:
+        for tensor_threshold in tensor_thresholds:
+            proto_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,module_name)
+            time_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,time_name)
+
+            if os.path.exists(proto_path) and os.path.exists(time_path):
+                with open(proto_path, "rb") as f:
+                    hlo_proto = hlo_pb2.HloProto()
+                    hlo_proto.ParseFromString(f.read())
+                    hlo_module = hlo_proto.hlo_module
+                    res = gen_data(hlo_module)
+                with open(time_path, "r") as f:
+                    first_line = f.readline()
+                    for last_line in f:
+                        pass
+                    time  = float(last_line.split(":")[-1])
+                    res["execution_time"] = time
+                training_datas.append(res)
+    op_levels = [888]
+    tensor_thresholds = range(150,200)
     for op_level in op_levels:
         for tensor_threshold in tensor_thresholds:
             proto_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,module_name)
