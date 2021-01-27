@@ -125,7 +125,7 @@ with tf.device("/gpu:0"):
             if epoch % 50 == 0:
                 info("==== save ====")
                 model.save_weights('weights')
-                save(records, "records")
+                #save(records, "records")
         else: # test
             inputs = []
             graphs = []
