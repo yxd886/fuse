@@ -4,6 +4,8 @@ import base64
 import numpy as np
 import sys
 sys.path.append("../")
+sys.path.append("../../")
+
 import tensorflow as tf
 from flask import Flask, render_template, request, jsonify
 from data import gen_data
