@@ -8,13 +8,20 @@ import tensorflow as tf
 from flask import Flask, render_template, request, jsonify
 from data import gen_data
 import tensorflow.compiler.xla.service.hlo_pb2 as hlo_pb2
+from model import Model
 
 
 app = Flask(__name__)
 
 model_file = 'my_model'
-global model
-model = tf.keras.models.load_model(model_file)
+with tf.device("/gpu:0"):
+    model = Model()
+
+    try:
+        model.load_weights('weights')
+        print("load saved weight")
+    except:
+        print("no saved weight")
 
 
 

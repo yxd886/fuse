@@ -62,7 +62,12 @@ class Model(tf.keras.Model):
             GConv(node_hidden, tf.identity)
         ]
 
-        self.final_rank = tf.keras.layers.Dense(1, activation=None)
+        self.final_ranks = [
+            tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu),
+            tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu),
+            tf.keras.layers.Dense(1, activation=None),
+
+        ]
 
 
     def set_graph(self, graph):
@@ -89,4 +94,7 @@ class Model(tf.keras.Model):
         for gconv_layer in self.gconv_layers:
             instruction_feats, computation_feats,final_feats = gconv_layer(self.graph, instruction_feats, computation_feats, final_feats,edge_feats)
 
-        return  tf.squeeze(self.final_rank(final_feats), axis=1)
+        for final_rank in self.final_ranks:
+            final_feats  = final_rank(final_feats)
+
+        return  tf.squeeze(final_feats, axis=1)
