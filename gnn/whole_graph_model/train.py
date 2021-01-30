@@ -2,10 +2,12 @@ import numpy as np
 import time
 import tensorflow as tf
 
-from data import get_all_data,get_test_data
-from model import Model
+
 import sys
 sys.path.append("../")
+sys.path.append("../../")
+from data import get_all_data,get_test_data
+from model import Model
 from utils import save, load, info
 
 
@@ -125,7 +127,8 @@ with tf.device("/gpu:0"):
             if epoch % 50 == 0:
                 info("==== save ====")
                 model.save_weights('weights')
-                save(records, "records")
+                model.save("my_model")
+                #save(records, "records")
         else: # test
             inputs = []
             graphs = []

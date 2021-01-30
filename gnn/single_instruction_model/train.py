@@ -2,23 +2,22 @@ import numpy as np
 import time
 import tensorflow as tf
 
-from data import get_all_data,get_test_data
-from model import Model
+
 import sys
 sys.path.append("../")
+sys.path.append("../../")
+from data import get_all_data,get_test_data
+from model import Model
 from utils import save, load, info
 
 
 
 
 def compare(pred,real):
-    sort_pred = sorted(pred)
-    sort_real = sorted(real)
-    pred_index = [sort_pred.index(item) for item in pred]
-    real_index = [sort_real.index(item) for item in real]
-    info("real rank index:",real_index)
-    info("pred rank index:",pred_index)
-    return str(pred_index)==str(real_index)
+    a = pred-real
+    c= a/real
+    print("individual predict accuracy:",c)
+    print("total accuracy:",sum(c)/len(c))
 
 try:
     records = load("records")
@@ -83,8 +82,7 @@ with tf.device("/gpu:0"):
                 execution_times.append(record["execution_time"])
 
 
-
-            # learn
+            #learn
             with tf.GradientTape() as tape:
                 tape.watch(model.trainable_weights)
                 ranks = []
@@ -96,24 +94,20 @@ with tf.device("/gpu:0"):
                     ranks.append(ranklogit)
 
                 loss = 0
-                for i in range(len(ranks)):
-                    for j in range(len(ranks)):
-                        #loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.log(1+tf.math.exp(ranks[j]-ranks[i])), lambda: 0)
-                        loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.reduce_logsumexp([0, ranks[j] - ranks[i]]), lambda: 0)
-
-                loss = tf.dtypes.cast(loss, tf.float32)
+                ranks = tf.concat(ranks,axis=1)
+                execution_times = np.array(execution_times)
+                tf_execution_times = tf.convert_to_tensor(execution_times,dtype = tf.float32)
+                loss = tf.keras.losses.MSE(tf_execution_times,ranks)
                 info("rank loss:",loss.numpy())
                 if L2_regularization_factor > 0:
                     for weight in model.trainable_weights:
                         loss += L2_regularization_factor * tf.nn.l2_loss(weight)
                 info("real_time:",execution_times)
-                rank_numpy = [rank.numpy() for rank in ranks]
+                rank_numpy = ranks.numpy()
                 info("predict_rank:",rank_numpy)
                 info(record_ids, loss.numpy())
-                if compare(rank_numpy,execution_times):
-                    info("prediction success!")
-                else:
-                    info("prediction fail!")
+                compare(rank_numpy,execution_times)
+
 
 
 
@@ -125,7 +119,7 @@ with tf.device("/gpu:0"):
             if epoch % 50 == 0:
                 info("==== save ====")
                 model.save_weights('weights')
-                save(records, "records")
+                #save(records, "records")
         else: # test
             inputs = []
             graphs = []
@@ -161,14 +155,13 @@ with tf.device("/gpu:0"):
                 ranklogit = tf.math.reduce_mean(ranklogit)
                 ranks.append(ranklogit)
 
+            ranks = tf.concat(ranks, axis=1)
+            execution_times = np.array(execution_times)
+            tf_execution_times = tf.convert_to_tensor(execution_times, dtype=tf.float32)
+            loss = tf.keras.losses.MSE(tf_execution_times, ranks)
+
             info("chosen sample index:",test_ids)
-            info("real_time:", execution_times)
-            rank_numpy = [rank.numpy() for rank in ranks]
-            info("predict_rank:", rank_numpy)
-            if compare(rank_numpy, execution_times):
-                info("prediction success!")
-                test_counter+=1
-            else:
-                info("prediction fail!")
-            print("accuracy: {}/{} = {}".format(test_counter,epoch+1,test_counter/(epoch+1)))
+            info("loss:", loss.numpy())
+            rank_numpy = ranks.numpy()
+            compare(rank_numpy, execution_times)
 
