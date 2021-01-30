@@ -30,7 +30,7 @@ with tf.device("/gpu:0"):
 @app.route('/predict', methods=[ 'POST'])
 def launch():
     if request.method == 'POST':
-        data = request.form.get("data",default = None)
+        data = request.get_data()
         hlo_module = hlo_pb2.HloProto()
         hlo_module.ParseFromString(data)
         res = gen_data(hlo_module.hlo_module)
@@ -51,7 +51,7 @@ def launch():
 
         req = {
             "code": "0000",
-            "result": ranklogit,
+            "result": str(ranklogit),
         }
         return jsonify(req)
 

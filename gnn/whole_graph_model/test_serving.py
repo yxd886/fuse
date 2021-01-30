@@ -7,13 +7,16 @@ url_base = "localhost:3335"
 op_level = 0
 threshold =0
 
-path = "test.pb"
+path = "test_hlo.pb"
 if os.path.exists(path) and os.path.exists(path):
     with open(path, "rb") as f:
-        data = {
-            "data": f.read()
-        }
+        hlo_module = hlo_pb2.HloProto()
+        hlo_module.ParseFromString(f.read())
 
-        rep = requests.post("http://" + url_base + "/predict", data=data)
+        header = {"Content-Type": "image/gif"}
+        data = hlo_module.SerializeToString()
+
+
+        rep = requests.post("http://" + url_base + "/predict", data=data,headers=header)
 
         print(rep.json())
