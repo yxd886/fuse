@@ -13,6 +13,8 @@ from utils import save, load, info
 
 
 
+compare_ratio =1.015
+
 def compare(pred,real):
     sort_pred = sorted(pred)
     sort_real = sorted(real)
@@ -20,7 +22,15 @@ def compare(pred,real):
     real_index = [sort_real.index(item) for item in real]
     info("real rank index:",real_index)
     info("pred rank index:",pred_index)
-    return str(pred_index)==str(real_index)
+    for i in range(len(pred)):
+        for j in range(len(pred)):
+            ratio = real[i]/real[j]
+            if ratio>compare_ratio and pred[i]<=pred[j]:
+                info("wrong compare for index {} and index {}".format(i,j))
+                return False
+    return True
+
+
 
 try:
     records = load("records")
@@ -100,8 +110,11 @@ with tf.device("/gpu:0"):
                 loss = 0
                 for i in range(len(ranks)):
                     for j in range(len(ranks)):
-                        #loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.log(1+tf.math.exp(ranks[j]-ranks[i])), lambda: 0)
-                        loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.reduce_logsumexp([0, ranks[j] - ranks[i]]), lambda: 0)
+                        #loss += tf.cond(execution_times[i] > execution_times[j], lambda: tf.math.reduce_logsumexp([0, ranks[j] - ranks[i]]), lambda: 0)
+                        ratio = execution_times[i]/execution_times[j]
+
+                        loss += tf.cond(ratio > compare_ratio, lambda: tf.math.reduce_logsumexp([0, ranks[j] - ranks[i]]), lambda:  0)
+
 
                 loss = tf.dtypes.cast(loss, tf.float32)
                 info("rank loss:",loss.numpy())
