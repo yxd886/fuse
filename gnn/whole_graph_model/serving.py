@@ -53,7 +53,7 @@ def launch():
             "code": "0000",
             "result": str(ranklogit),
         }
-        return jsonify(req)
+        return str(ranklogit)
 
 
 if __name__ == '__main__':
