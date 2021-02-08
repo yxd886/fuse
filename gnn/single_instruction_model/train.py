@@ -94,10 +94,9 @@ with tf.device("/gpu:0"):
                     ranks.append(ranklogit)
 
                 loss = 0
-                ranks = tf.concat(ranks,axis=1)
-                execution_times = np.array(execution_times)
-                tf_execution_times = tf.convert_to_tensor(execution_times,dtype = tf.float32)
-                loss = tf.keras.losses.MSE(tf_execution_times,ranks)
+                for k,rank in enumerate(ranks):
+                    loss = loss+tf.math.square(rank-execution_times[k])
+                loss = loss/len(ranks)
                 info("rank loss:",loss.numpy())
                 if L2_regularization_factor > 0:
                     for weight in model.trainable_weights:
