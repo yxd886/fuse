@@ -11,7 +11,7 @@ from flask import Flask, render_template, request, jsonify
 from data import gen_data
 import tensorflow.compiler.xla.service.hlo_pb2 as hlo_pb2
 from model import Model
-
+import threading
 
 app = Flask(__name__)
 
@@ -24,7 +24,7 @@ with tf.device("/gpu:0"):
         print("load saved weight")
     except:
         print("no saved weight")
-
+my_lock = threading.Lock()
 
 
 @app.route('/predict', methods=[ 'POST'])
@@ -45,8 +45,10 @@ def launch():
 
         input = [instruction_feats, computation_feats, final_feats, instruction_edge_feats,call_computation_edge_feats, in_computation_edge_feats, to_final_edge_feats]
         graph = res["graph"]
+        my_lock.acquire()
         model.set_graph(graph)
         ranklogit = model(input, training=False)
+        my_lock.release()
         ranklogit = tf.math.reduce_mean(ranklogit).numpy()
 
         req = {
