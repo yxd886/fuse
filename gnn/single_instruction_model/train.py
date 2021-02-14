@@ -6,7 +6,7 @@ import tensorflow as tf
 import sys
 sys.path.append("../")
 sys.path.append("../../")
-from data import get_all_data,get_test_data
+from data import get_all_data,get_test_data,get_all_single_data,get_test_single_data
 from model import Model
 from utils import save, load, info
 
@@ -20,19 +20,19 @@ def compare(pred,real):
     print("total accuracy:",sum(c)/len(c))
 
 try:
-    records = load("records")
+    records = load("single_records")
     info("load saved records")
 except:
-    records = get_all_data()
+    records = get_all_single_data()
     info("no saved records")
     save(records, "records")
 
 
 try:
-    tests = load("tests")
+    tests = load("single_tests")
     info("load saved tests")
 except:
-    tests = get_test_data()
+    tests = get_test_single_data()
     info("no saved tests")
     save(tests, "tests")
 

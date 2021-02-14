@@ -4,7 +4,7 @@ from utils import groupby, car, cadr, cdr, info, load, save
 
 files = ["0_0_before_optimizations.hlo","0_0_after_optimizations.hlo","3_0_before_optimizations.hlo","3_0_after_optimizations.hlo","3_60_before_optimizations.hlo","3_60_after_optimizations.hlo"]
 files = ["3_60_after_optimizations.hlo"]
-files = ["hlo_execution_profile_data"]
+files = ["hlo_execution_profile_data_61"]
 
 
 def generate_hlo_txt():
