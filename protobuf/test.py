@@ -21,6 +21,7 @@ def generate_profile_txt():
         with open(file,"rb") as f:
             profiledata = profiler_pb2.HloExecutionProfileData()
             profiledata.ParseFromString(f.read())
+        print("read success")
         with open(file+".pbtxt","w") as f:
             f.write(str(profiledata))
 
