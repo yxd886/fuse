@@ -6,8 +6,8 @@ import tensorflow as tf
 import sys
 sys.path.append("../")
 sys.path.append("../../")
-from data import get_all_data,get_test_data,get_all_single_data,get_test_single_data
-from model import Model
+from data import get_all_single_data,get_test_single_data
+from single_model import SingleModel
 from utils import save, load, info
 
 
@@ -38,7 +38,7 @@ except:
 
 
 with tf.device("/gpu:0"):
-    model = Model()
+    model = SingleModel()
 
     try:
         model.load_weights('weights')

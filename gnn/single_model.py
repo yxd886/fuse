@@ -1,27 +1,26 @@
+
 import tensorflow as tf
 import dgl.function as fn
 import numpy as np
 from utils import info, positional_encoding
 
 
-class GConv(tf.keras.layers.Layer):
+class SingleGConv(tf.keras.layers.Layer):
     '''Graph Conv layer that concats the edge features before sending message'''
     def __init__(self, out_feats, activation=None):
-        super(GConv, self).__init__()
+        super(SingleGConv, self).__init__()
         self.activation = activation
-        self.all_etypes = ["in_computation_edge_feats", "prev", "succ", "call_computation_edge_feats", "to_final_edge_feats"]
+        self.all_etypes = ["prev", "succ","to_final_edge_feats"]
 
         self.layers = { etype: tf.keras.layers.Dense(out_feats, activation=None) for etype in self.all_etypes }
 
-    def call(self, graph, instruction_feats, computation_feats, final_feats,edge_feats):
+    def call(self, graph, instruction_feats, final_feats,edge_feats):
         instruction_dst,computation_dst,final_dst = [], [], []
         for stype, etype, dtype in graph.canonical_etypes:
             g = graph[etype].local_var()
 
             if stype == 'instruction':
                 g.srcdata['i'] = instruction_feats
-            elif stype == 'computation':
-                g.srcdata['i'] = computation_feats
             elif stype== "final":
                 g.srcdata['i'] = final_feats
 
@@ -33,36 +32,32 @@ class GConv(tf.keras.layers.Layer):
 
             if dtype == 'instruction':
                 instruction_dst.append(g.dstdata['o'])
-            elif dtype == 'computation':
-                computation_dst.append(g.dstdata['o'])
             elif dtype == "final":
                 final_dst.append(g.dstdata['o'])
         instruction_dst = tf.math.add_n(instruction_dst) / len(instruction_dst)
-        computation_dst = tf.math.add_n(computation_dst) / len(computation_dst)
         final_dst = tf.math.add_n(final_dst) / len(final_dst)
-        return self.activation(instruction_feats + instruction_dst), self.activation(computation_feats + computation_dst), self.activation(final_feats+final_dst)
+        return self.activation(instruction_feats + instruction_dst), self.activation(final_feats+final_dst)
 
-class Model(tf.keras.Model):
+class SingleModel(tf.keras.Model):
     def __init__(self):
-        super(Model, self).__init__()
+        super(SingleModel, self).__init__()
 
         node_hidden = 64
         edge_hidden = 8
-        self.all_etypes = ["in_computation_edge_feats", "prev", "succ", "call_computation_edge_feats", "to_final_edge_feats"]
+        self.all_etypes = [ "prev", "succ" "to_final_edge_feats"]
 
 
         self.instruction_trans = tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu)
-        self.computation_trans = tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu)
         self.final_trans = tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu)
         self.edge_trans = { etype: tf.keras.layers.Dense(edge_hidden, activation=tf.nn.elu) for etype in self.all_etypes }
 
         self.gconv_layers = [
-            GConv(node_hidden, tf.nn.elu),
-            GConv(node_hidden, tf.nn.elu),
-            GConv(node_hidden, tf.nn.elu),
-            GConv(node_hidden, tf.nn.elu),
-            GConv(node_hidden, tf.nn.elu),
-            GConv(node_hidden, tf.identity)
+            SingleGConv(node_hidden, tf.nn.elu),
+            SingleGConv(node_hidden, tf.nn.elu),
+            SingleGConv(node_hidden, tf.nn.elu),
+            SingleGConv(node_hidden, tf.nn.elu),
+            SingleGConv(node_hidden, tf.nn.elu),
+            SingleGConv(node_hidden, tf.identity)
         ]
 
         self.final_ranks = [
@@ -78,7 +73,7 @@ class Model(tf.keras.Model):
         #self.graph = graph
 
     def call(self, inputs):
-        [instruction_feats, computation_feats,final_feats, instruction_edge_feats, call_computation_edge_feats, in_computation_edge_feats,to_final_edge_feats] = inputs
+        [instruction_feats, computation_feats,final_feats, instruction_edge_feats ,to_final_edge_feats] = inputs
 
         instruction_feats = self.instruction_trans(instruction_feats)
         computation_feats = self.computation_trans(computation_feats)
@@ -86,19 +81,16 @@ class Model(tf.keras.Model):
 
 
         edge_feats = {
-            "call_computation_edge_feats": call_computation_edge_feats,
             "prev": instruction_edge_feats,
             "succ": instruction_edge_feats,
-            "in_computation_edge_feats": in_computation_edge_feats,
             "to_final_edge_feats":to_final_edge_feats
         }
         edge_feats = { etype: self.edge_trans[etype](edge_feats[etype]) for etype in self.all_etypes  }
 
         for gconv_layer in self.gconv_layers:
-            instruction_feats, computation_feats,final_feats = gconv_layer(self.graph, instruction_feats, computation_feats, final_feats,edge_feats)
+            instruction_feats,final_feats = gconv_layer(self.graph, instruction_feats, computation_feats, final_feats,edge_feats)
 
         for final_rank in self.final_ranks:
             final_feats  = final_rank(final_feats)
 
         return  tf.squeeze(final_feats, axis=1)
-
