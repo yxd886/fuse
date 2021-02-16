@@ -30,6 +30,8 @@ except:
     info("no saved records")
     save(records, "single_records")
 
+    records = records+records+records
+
 
 try:
     tests = load("single_tests")
@@ -38,6 +40,8 @@ except:
     tests = get_test_single_data()
     info("no saved tests")
     save(tests, "single_tests")
+
+    tests = tests+tests+tests
 
 
 with tf.device("/gpu:0"):
