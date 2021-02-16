@@ -55,7 +55,7 @@ with tf.device("/gpu:0"):
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=.00004, clipnorm=6)
     L2_regularization_factor = .0001
-    sample_size = 6
+    sample_size = 32
     train = True
     if train==False:
         sample_size = 2
