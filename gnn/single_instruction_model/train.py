@@ -6,6 +6,7 @@ import tensorflow as tf
 import sys
 sys.path.append("../")
 sys.path.append("../../")
+sys.path.append("../../protobuf/")
 from single_data import get_train_single_data,get_test_single_data
 from single_model import SingleModel
 from utils import save, load, info
