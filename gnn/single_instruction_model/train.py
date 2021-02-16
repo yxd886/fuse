@@ -6,7 +6,7 @@ import tensorflow as tf
 import sys
 sys.path.append("../")
 sys.path.append("../../")
-from data import get_all_single_data,get_test_single_data
+from single_data import get_train_single_data,get_test_single_data
 from single_model import SingleModel
 from utils import save, load, info
 
@@ -23,7 +23,7 @@ try:
     records = load("single_records")
     info("load saved records")
 except:
-    records = get_all_single_data()
+    records = get_train_single_data()
     info("no saved records")
     save(records, "records")
 
