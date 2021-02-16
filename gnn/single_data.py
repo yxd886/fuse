@@ -92,9 +92,9 @@ def gen_data_from_hlo_def(hlo_def,profile_def):
     datasets = []
     ComputationName_Time_Dict = dict()
 
-    print_data = profile_def.print_data
+    printer_data = profile_def.printer_data
     profiler_counters =profile_def.profile_counters
-    for computation_info in print_data.computation_infos:
+    for computation_info in printer_data.computation_infos:
         ComputationName_Time_Dict[computation_info.name] = (profiler_counters[computation_info.profile_index]/1.6325)/(10**6)    #ms
 
 
