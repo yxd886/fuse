@@ -86,18 +86,28 @@ def gen_single_computation_data(computation_def,exe_time):
 
 def gen_data_from_hlo_def(hlo_def,profile_def):
     datasets = []
-    ComputationName_Time_Dict = dict()
+    InstructionName_Time_Dict = dict()
+    Id_Computation_dict = {}
+    fusion_instructionName_computation_dict = {}
+    for computation in (hlo_def.computations):
+        Id_Computation_dict[computation.id]=computation
+    for computation in (hlo_def.computations):
+        for instruction in computation.instructions:
+            if instruction.opcode=="fusion":
+                assert(len(instruction.called_computation_ids)==1)
+                fusion_instructionName_computation_dict[instruction.name] = Id_Computation_dict[instruction.called_computation_ids[0]]
 
     printer_data = profile_def.printer_data
     profiler_counters =profile_def.profile_counters
     for computation_info in printer_data.computation_infos:
-        ComputationName_Time_Dict[computation_info.name] = (profiler_counters[computation_info.profile_index]/1.6325)   #ns
+        for instruction_info in computation_info.instruction_infos:
+            instruction_name = instruction_info.short_name.split(" ")[0].strip()[1:]
+            InstructionName_Time_Dict[instruction_name] = (profiler_counters[instruction_info.profile_index]/1.6325)   #ns
 
 
-    for computation in (hlo_def.computations):
-        if "fused_computation" not in computation.name:
-            continue
-        ret = gen_single_computation_data(computation,ComputationName_Time_Dict[computation.name])
+    for fusion_instructionName in fusion_instructionName_computation_dict:
+        computation = fusion_instructionName_computation_dict[fusion_instructionName]
+        ret = gen_single_computation_data(computation,InstructionName_Time_Dict[fusion_instructionName])
         datasets.append(ret)
     return datasets
 
@@ -162,6 +172,7 @@ def get_train_single_data():
 
                 training_datas.extend(res)
     print("training data length:",len(training_datas))
+
     return training_datas
 
 
