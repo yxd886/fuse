@@ -194,6 +194,12 @@ def get_test_single_data():
 
                 training_datas.extend(res)
     print("training data length:",len(training_datas))
+    counter=0
+    for item in training_datas:
+        if item["execution_time"]==0:
+            counter+=1
+    print("training data zero length:",counter)
+
     return training_datas
 
 
