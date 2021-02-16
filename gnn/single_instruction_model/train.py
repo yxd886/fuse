@@ -17,8 +17,10 @@ from utils import save, load, info
 def compare(pred,real):
     a = pred-real
     c= a/real
-    print("individual predict accuracy:",c)
-    print("total accuracy:",sum(c)/len(c))
+    print("predict:",pred)
+    print("real:",real)
+    print("individual predict ratio:",c)
+    print("total ratio:",sum(c)/len(c))
 
 try:
     records = load("single_records")
@@ -71,14 +73,11 @@ with tf.device("/gpu:0"):
                 record_id = record_ids[i]
                 record = records[record_id]
                 instruction_feats     = tf.convert_to_tensor(record["instruction_feats"], dtype=tf.float32)
-                computation_feats = tf.convert_to_tensor(record["computation_feats"], dtype=tf.float32)
                 final_feats = tf.convert_to_tensor(record["final_feats"], dtype=tf.float32)
                 instruction_edge_feats = tf.convert_to_tensor(record["instruction_edge_feats"], dtype=tf.float32)
-                call_computation_edge_feats   = tf.convert_to_tensor(record["call_computation_edge_feats"], dtype=tf.float32)
-                in_computation_edge_feats  = tf.convert_to_tensor(record["in_computation_edge_feats"], dtype=tf.float32)
                 to_final_edge_feats  = tf.convert_to_tensor(record["to_final_edge_feats"], dtype=tf.float32)
 
-                inputs.append([instruction_feats, computation_feats,final_feats, instruction_edge_feats, call_computation_edge_feats, in_computation_edge_feats,to_final_edge_feats])
+                inputs.append([instruction_feats,final_feats, instruction_edge_feats,to_final_edge_feats])
                 graphs.append(record["graph"])
                 execution_times.append(record["execution_time"])
 
@@ -102,14 +101,9 @@ with tf.device("/gpu:0"):
                 if L2_regularization_factor > 0:
                     for weight in model.trainable_weights:
                         loss += L2_regularization_factor * tf.nn.l2_loss(weight)
-                info("real_time:",execution_times)
-                rank_numpy = ranks.numpy()
-                info("predict_rank:",rank_numpy)
+                rank_numpy = np.array([rank.numpy() for rank in ranks])
                 info(record_ids, loss.numpy())
-                compare(rank_numpy,execution_times)
-
-
-
+                compare(rank_numpy,np.array(execution_times))
 
                 grads = tape.gradient(loss, model.trainable_weights)
                 #info([tf.reduce_mean(tf.abs(grad)).numpy() for grad in grads])
@@ -148,20 +142,23 @@ with tf.device("/gpu:0"):
                 execution_times.append(test["execution_time"])
 
             # test
+
             ranks = []
             for i in range(sample_size):
                 model.set_graph(graphs[i])
-                ranklogit = model(inputs[i], training=False)
+                ranklogit = model(inputs[i], training=True)
                 ranklogit = tf.math.reduce_mean(ranklogit)
                 ranks.append(ranklogit)
 
-            ranks = tf.concat(ranks, axis=1)
-            execution_times = np.array(execution_times)
-            tf_execution_times = tf.convert_to_tensor(execution_times, dtype=tf.float32)
-            loss = tf.keras.losses.MSE(tf_execution_times, ranks)
-
+            loss = 0
+            for k, rank in enumerate(ranks):
+                loss = loss + tf.math.square(rank - execution_times[k])
+            loss = loss / len(ranks)
+            if L2_regularization_factor > 0:
+                for weight in model.trainable_weights:
+                    loss += L2_regularization_factor * tf.nn.l2_loss(weight)
+            rank_numpy = np.array([rank.numpy() for rank in ranks])
             info("chosen sample index:",test_ids)
             info("loss:", loss.numpy())
-            rank_numpy = ranks.numpy()
-            compare(rank_numpy, execution_times)
+            compare(rank_numpy, np.array(execution_times))
 

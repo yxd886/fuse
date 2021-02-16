@@ -73,10 +73,9 @@ class SingleModel(tf.keras.Model):
         #self.graph = graph
 
     def call(self, inputs):
-        [instruction_feats, computation_feats,final_feats, instruction_edge_feats ,to_final_edge_feats] = inputs
+        [instruction_feats,final_feats, instruction_edge_feats ,to_final_edge_feats] = inputs
 
         instruction_feats = self.instruction_trans(instruction_feats)
-        computation_feats = self.computation_trans(computation_feats)
         final_feats = self.final_trans(final_feats)
 
 
@@ -88,7 +87,7 @@ class SingleModel(tf.keras.Model):
         edge_feats = { etype: self.edge_trans[etype](edge_feats[etype]) for etype in self.all_etypes  }
 
         for gconv_layer in self.gconv_layers:
-            instruction_feats,final_feats = gconv_layer(self.graph, instruction_feats, computation_feats, final_feats,edge_feats)
+            instruction_feats,final_feats = gconv_layer(self.graph, instruction_feats, final_feats,edge_feats)
 
         for final_rank in self.final_ranks:
             final_feats  = final_rank(final_feats)
