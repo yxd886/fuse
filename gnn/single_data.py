@@ -24,31 +24,31 @@ def gen_single_computation_data(computation_def,exe_time):
     # edges
     instruction_edge_prev = [], []
     instruction_edge_succ = [], []
-    computation_to_final = [], []
+    instruction_to_final = [], []
 
     # dicts
     id_instruction_dict = {}
     instructionName_index_dict = {}
-    instructionName_instruction_dict = {}
-    id_computation_dict = {}
-    computationName_index_dict = {}
-    computationName_computation = {}
 
 
 
-    tensor_sizes = np.zeros((len(id_instruction_dict), len(id_instruction_dict)))
     instruction_edge_feats = []
-    call_computation_edge_feats = []
     in_computation_edge_feats = []
     to_final_edge_feats = []
 
     instruction_feats = []  # opcode,oprand number, output_size
-    computation_feats = []  # instructions number, parameters number
     final_feats = []  # nums of computations
 
     final_feats.append([len(computation_def.instructions)])
 
-    for instruction in computation_def.instructions:
+    for index,instruction in enumerate(computation_def.instructions):
+        id_instruction_dict[instruction.id] = instruction
+        instructionName_index_dict[instruction.name] = index
+
+        instruction_to_final[0].append(index)
+        instruction_to_final[1].append(0)
+
+
         to_final_edge_feats.append([1])
 
         output_size = get_output_size(instruction)
@@ -57,7 +57,6 @@ def gen_single_computation_data(computation_def,exe_time):
             output_size])  # instruction features
 
         # find oprand of this instruction
-        global_size = 0
         for operand_id in instruction.operand_ids:
             operand_instruction = id_instruction_dict[operand_id]
             instruction_edge_prev[0].append(instructionName_index_dict[instruction.name])
@@ -66,16 +65,13 @@ def gen_single_computation_data(computation_def,exe_time):
             instruction_edge_succ[1].append(instructionName_index_dict[instruction.name])
 
             size = get_output_size(operand_instruction)
-            global_size = global_size + size
-            tensor_sizes[instructionName_index_dict[operand_instruction.name], instructionName_index_dict[
-                instruction.name]] = size
             instruction_edge_feats.append([size])
 
 
     g = dgl.heterograph({
         ('instruction', 'prev', 'instruction'): instruction_edge_prev,
         ('instruction', 'succ', 'instruction'): instruction_edge_succ,
-        ('instruction', 'to_final_edge_feats', 'final'): computation_to_final
+        ('instruction', 'to_final_edge_feats', 'final'): instruction_to_final
 
     })
 
