@@ -100,7 +100,7 @@ def gen_data_from_hlo_def(hlo_def,profile_def):
 
 
 
-    for computation in enumerate(hlo_def.computations):
+    for computation in (hlo_def.computations):
         ret = gen_single_computation_data(computation,ComputationName_Time_Dict[computation.name])
         datasets.append(ret)
     return datasets
