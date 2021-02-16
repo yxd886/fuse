@@ -58,16 +58,22 @@ with tf.device("/gpu:0"):
 
     test_counter = 0
 
+    max_train_iteration = len(records)//sample_size
+    max_test_iteration = len(tests)//sample_size
+
+
     for epoch in range(20000000):
         if train:
             inputs = []
             graphs = []
             record_ids=[]
             execution_times=[]
-            while len(record_ids)<sample_size:
-                record_id = np.random.randint(len(records))
-                if record_id not in record_ids:
-                    record_ids.append(record_id)
+            #while len(record_ids)<sample_size:
+            #    record_id = np.random.randint(len(records))
+            #    if record_id not in record_ids:
+            #        record_ids.append(record_id)
+            real_epoch = epoch%max_train_iteration
+            record_ids = range(sample_size*real_epoch,(real_epoch+1)*sample_size)
 
             for i in range(sample_size):     # random sample 3 records
                 record_id = record_ids[i]
@@ -119,10 +125,13 @@ with tf.device("/gpu:0"):
             graphs = []
             test_ids = []
             execution_times = []
-            while len(test_ids) < sample_size:
-                test_id = np.random.randint(len(tests))
-                if test_id not in test_ids:
-                    test_ids.append(test_id)
+            #while len(test_ids) < sample_size:
+            #    test_id = np.random.randint(len(tests))
+            #    if test_id not in test_ids:
+            #        test_ids.append(test_id)
+
+            real_epoch = epoch%max_test_iteration
+            test_ids = range(sample_size*real_epoch,(real_epoch+1)*sample_size)
 
             for i in range(sample_size):  # random sample 3 records
                 test_id = test_ids[i]
