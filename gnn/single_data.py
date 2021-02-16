@@ -155,14 +155,14 @@ def get_train_single_data():
             profiler_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,profiler_name)
 
             if os.path.exists(hlo_module_path) and os.path.exists(profiler_path):
-                with open(profiler_path, "r") as f:
+                with open(profiler_path, "rb") as f:
                     profiledata = profiler_pb2.HloExecutionProfileData()
                     profiledata.ParseFromString(f.read())
                 with open(hlo_module_path, "rb") as f:
                     hlo_proto = hlo_pb2.HloProto()
                     hlo_proto.ParseFromString(f.read())
                     hlo_module = hlo_proto.hlo_module
-                res = gen_data(hlo_module,profiledata)
+                res = gen_data_from_hlo_def(hlo_module,profiledata)
 
                 training_datas.extend(res)
     print("training data length:",len(training_datas))
@@ -187,14 +187,14 @@ def get_test_single_data():
             profiler_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,profiler_name)
 
             if os.path.exists(hlo_module_path) and os.path.exists(profiler_path):
-                with open(profiler_path, "r") as f:
+                with open(profiler_path, "rb") as f:
                     profiledata = profiler_pb2.HloExecutionProfileData()
                     profiledata.ParseFromString(f.read())
                 with open(hlo_module_path, "rb") as f:
                     hlo_proto = hlo_pb2.HloProto()
                     hlo_proto.ParseFromString(f.read())
                     hlo_module = hlo_proto.hlo_module
-                res = gen_data(hlo_module,profiledata)
+                res = gen_data_from_hlo_def(hlo_module,profiledata)
 
                 training_datas.extend(res)
     print("training data length:",len(training_datas))
