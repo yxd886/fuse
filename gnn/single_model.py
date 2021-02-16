@@ -44,7 +44,7 @@ class SingleModel(tf.keras.Model):
 
         node_hidden = 64
         edge_hidden = 8
-        self.all_etypes = [ "prev", "succ" "to_final_edge_feats"]
+        self.all_etypes = [ "prev", "succ","to_final_edge_feats"]
 
 
         self.instruction_trans = tf.keras.layers.Dense(node_hidden, activation=tf.nn.elu)
