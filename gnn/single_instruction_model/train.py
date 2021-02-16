@@ -30,7 +30,7 @@ except:
     info("no saved records")
     save(records, "single_records")
 
-    records = records+records+records
+records = records+records+records
 
 
 try:
@@ -41,7 +41,7 @@ except:
     info("no saved tests")
     save(tests, "single_tests")
 
-    tests = tests+tests+tests
+tests = tests+tests+tests
 
 
 with tf.device("/gpu:0"):
