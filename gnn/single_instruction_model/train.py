@@ -28,7 +28,7 @@ try:
 except:
     records = get_train_single_data()
     info("no saved records")
-    save(records, "records")
+    save(records, "single_records")
 
 
 try:
@@ -37,7 +37,7 @@ try:
 except:
     tests = get_test_single_data()
     info("no saved tests")
-    save(tests, "tests")
+    save(tests, "single_tests")
 
 
 with tf.device("/gpu:0"):
