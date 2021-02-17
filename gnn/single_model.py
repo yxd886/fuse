@@ -62,7 +62,7 @@ class SingleModel(tf.keras.Model):
             SingleGConv(node_hidden, tf.nn.elu),
             SingleGConv(node_hidden, tf.nn.elu),
             SingleGConv(node_hidden, tf.nn.elu),
-            SingleGConv(node_hidden, tf.identity)
+            SingleGConv(node_hidden, tf.nn.elu)
         ]
 
         self.final_ranks = [
