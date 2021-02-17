@@ -102,7 +102,7 @@ def gen_data_from_hlo_def(hlo_def,profile_def):
     for computation_info in printer_data.computation_infos:
         for instruction_info in computation_info.instruction_infos:
             instruction_name = instruction_info.short_name.split(" ")[0].strip()[1:]
-            InstructionName_Time_Dict[instruction_name] = (profiler_counters[instruction_info.profile_index]/1.6325)   #ns
+            InstructionName_Time_Dict[instruction_name] = (profiler_counters[instruction_info.profile_index]/1.6325)/1000   #us
 
 
     for fusion_instructionName in fusion_instructionName_computation_dict:
