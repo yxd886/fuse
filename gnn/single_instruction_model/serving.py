@@ -6,6 +6,7 @@ import sys
 
 sys.path.append("../")
 sys.path.append("../../")
+sys.path.append("../../protobuf/")
 
 import tensorflow as tf
 from flask import Flask, render_template, request, jsonify
