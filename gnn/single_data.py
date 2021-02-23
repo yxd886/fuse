@@ -85,11 +85,8 @@ def gen_single_computation_data(computation_def,exe_time):
 
 
 
-def get_cost_model():
+def get_cost_model(profiler_path="hlo_execution_profile_data_61",hlo_module_path="training.module_0061.profile_hlo_module.hlo.pb"):
 
-    profiler_name = "hlo_execution_profile_data_61"
-    profiler_path = profiler_name
-    hlo_module_path = "training.module_0061.profile_hlo_module.hlo.pb"
 
     if os.path.exists(hlo_module_path) and os.path.exists(profiler_path):
         with open(profiler_path, "rb") as f:
@@ -105,19 +102,27 @@ def get_cost_model():
         for instruction in computation.instructions:
             Name_Instruction_Dict[instruction.name] = instruction
 
-    InstructionName_Time_Dict = dict()
+    InstructionName_Time_Dict = {}
+    Tuple_Time_Dict = {}
 
     printer_data = profile_def.printer_data
     profiler_counters =profile_def.profile_counters
     for computation_info in printer_data.computation_infos:
         for instruction_info in computation_info.instruction_infos:
             instruction_name = instruction_info.short_name.split(" ")[0].strip()[1:]
+
+            exe_time = (profiler_counters[instruction_info.profile_index]/1.6325)/1000   #us
             #using name as key
-            InstructionName_Time_Dict[instruction_name] = (profiler_counters[instruction_info.profile_index]/1.6325)/1000   #us
+            InstructionName_Time_Dict[instruction_name] = exe_time
             #using op type and shape tuple as key
+            instruction = Name_Instruction_Dict[instruction_name]
+            opcode = instruction.opcode
+            shape =get_shape_string(instruction)
+            Tuple_Time_Dict[(opcode,shape)] = exe_time
 
 
-    return InstructionName_Time_Dict
+
+    return InstructionName_Time_Dict,Tuple_Time_Dict
 
 
 def gen_data_from_hlo_def(hlo_def,profile_def):
@@ -150,7 +155,8 @@ def gen_data_from_hlo_def(hlo_def,profile_def):
 
 
 
-
+def get_shape_string(instruction):
+    return str(instruction.shape)
 
 
 def get_output_size(instruction):
@@ -249,12 +255,3 @@ def get_test_single_data():
 
     return training_datas
 
-
-if __name__=="__main__":
-    files = ["3_60_after_optimizations.hlo"]
-    for file in files:
-        with open(file+".pb","rb") as f:
-            hlo_module = hlo_pb2.HloProto()
-            hlo_module.ParseFromString(f.read())
-            res = gen_data(hlo_module.hlo_module)
-            print(res)
