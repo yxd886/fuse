@@ -122,7 +122,7 @@ def get_cost_model(profiler_path="hlo_execution_profile_data_61",hlo_module_path
 
 
 
-    return InstructionName_Time_Dict,Tuple_Time_Dict
+    return InstructionName_Time_Dict,Tuple_Time_Dict,hlo_module
 
 
 def gen_data_from_hlo_def(hlo_def,profile_def):
