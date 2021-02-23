@@ -84,6 +84,42 @@ def gen_single_computation_data(computation_def,exe_time):
             }
 
 
+
+def get_cost_model():
+
+    profiler_name = "hlo_execution_profile_data_61"
+    profiler_path = profiler_name
+    hlo_module_path = "training.module_0061.profile_hlo_module.hlo.pb"
+
+    if os.path.exists(hlo_module_path) and os.path.exists(profiler_path):
+        with open(profiler_path, "rb") as f:
+            profile_def = profiler_pb2.HloExecutionProfileData()
+            profile_def.ParseFromString(f.read())
+        with open(hlo_module_path, "rb") as f:
+            hlo_proto = hlo_pb2.HloProto()
+            hlo_proto.ParseFromString(f.read())
+            hlo_module = hlo_proto.hlo_module
+
+    Name_Instruction_Dict = {}
+    for computation in (hlo_module.computations):
+        for instruction in computation.instructions:
+            Name_Instruction_Dict[instruction.name] = instruction
+
+    InstructionName_Time_Dict = dict()
+
+    printer_data = profile_def.printer_data
+    profiler_counters =profile_def.profile_counters
+    for computation_info in printer_data.computation_infos:
+        for instruction_info in computation_info.instruction_infos:
+            instruction_name = instruction_info.short_name.split(" ")[0].strip()[1:]
+            #using name as key
+            InstructionName_Time_Dict[instruction_name] = (profiler_counters[instruction_info.profile_index]/1.6325)/1000   #us
+            #using op type and shape tuple as key
+
+
+    return InstructionName_Time_Dict
+
+
 def gen_data_from_hlo_def(hlo_def,profile_def):
     datasets = []
     InstructionName_Time_Dict = dict()
