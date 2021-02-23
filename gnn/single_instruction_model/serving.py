@@ -10,9 +10,8 @@ sys.path.append("../../protobuf/")
 
 import tensorflow as tf
 from flask import Flask, render_template, request, jsonify
-from single_data import CostModel
+from single_model import CostModel
 import tensorflow.compiler.xla.service.hlo_pb2 as hlo_pb2
-from model import Model
 import threading
 
 app = Flask(__name__)
