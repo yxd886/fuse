@@ -29,10 +29,10 @@ class CostModel():
 
 
     def test_accuracy(self):
-        estimated_time = self.estimate_time(self.hlo_module)
+        estimated_time = self.estimate_time(self.init_hlo_module)
         print("estimated_time withgnn:",estimated_time)
 
-        estimated_time = self.estimate_time_without_gnn(self.hlo_module)
+        estimated_time = self.estimate_time_without_gnn(self.init_hlo_module)
         print("estimated_time without gnn:",estimated_time)
 
     def acquire_gnn(self,computation_def):
