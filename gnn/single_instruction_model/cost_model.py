@@ -7,12 +7,15 @@ import tensorflow as tf
 from single_data import get_cost_model,gen_single_computation_data
 import tensorflow.compiler.xla.service.hlo_pb2 as hlo_pb2
 from single_model import SingleModel
+from utils import save, load, info
 
 
 
 class CostModel():
     def __init__(self,profiler_path="hlo_execution_profile_data_61",hlo_module_path="training.module_0061.profile_hlo_module.hlo.pb"):
         self.name_time_dict,self.tuple_time_dict,self.init_hlo_module = get_cost_model(profiler_path,hlo_module_path)
+
+        self.cache = {}
 
         with tf.device("/gpu:0"):
             self.model = SingleModel()
@@ -80,6 +83,11 @@ class CostModel():
                 time+=self.estimate_instruction_time(instruction)
             else:
                 computation = id_computation_dict[instruction.called_computation_ids[0]]
-                time+=self.acquire_gnn(computation)
+                if str(computation) in self.cache:
+                    time+=self.cache[str(computation)]
+                else:
+                    current_time = self.acquire_gnn(computation)
+                    self.cache[str(computation)] = current_time
+                    time+=current_time
         return time
 
