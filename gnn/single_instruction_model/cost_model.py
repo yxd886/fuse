@@ -65,9 +65,9 @@ class CostModel():
         time = 0
         all_reduce_time = 0
         for instruction in entry_computation.instructions:
-            time+=self.estimate_instruction_time(instruction)
+            time+=self.self.name_time_dict[instruction.name]
             if instruction.opcode=="all-reduce":
-                all_reduce_time+=self.estimate_instruction_time(instruction)
+                all_reduce_time+=self.name_time_dict[instruction.name]
         return time,all_reduce_time
 
 
