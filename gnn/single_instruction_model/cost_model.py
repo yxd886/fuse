@@ -35,8 +35,9 @@ class CostModel():
         estimated_time = self.estimate_time(self.init_hlo_module)
         print("estimated_time withgnn:",estimated_time)
 
-        estimated_time = self.estimate_time_without_gnn(self.init_hlo_module)
+        estimated_time,all_reduce_time = self.estimate_time_without_gnn(self.init_hlo_module)
         print("estimated_time without gnn:",estimated_time)
+        print("all-reduce_time without gnn:",all_reduce_time)
 
     def acquire_gnn(self,computation_def):
 
@@ -62,9 +63,12 @@ class CostModel():
             id_computation_dict[computation.id] = computation
         assert (entry_computation)
         time = 0
+        all_reduce_time = 0
         for instruction in entry_computation.instructions:
             time+=self.estimate_instruction_time(instruction)
-        return time
+            if instruction.opcode=="all-reduce":
+                all_reduce_time+=self.estimate_instruction_time(instruction)
+        return time,all_reduce_time
 
 
 
