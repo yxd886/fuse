@@ -29,7 +29,11 @@ def launch():
         hlo_module = hlo_proto.hlo_module
 
         with my_lock:
-            estimated_time = cost_model.estimate_time(hlo_module)
+            try:
+                estimated_time = cost_model.estimate_time(hlo_module)
+            except Exception as err:
+                print(err)
+                estimated_time=0
         return str(estimated_time)
 
 if __name__ == '__main__':
