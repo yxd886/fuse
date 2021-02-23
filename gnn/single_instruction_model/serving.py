@@ -24,8 +24,10 @@ cost_model = CostModel()
 def launch():
     if request.method == 'POST':
         data = request.get_data()
-        hlo_module = hlo_pb2.HloProto()
-        hlo_module.ParseFromString(data)
+        hlo_proto = hlo_pb2.HloProto()
+        hlo_proto.ParseFromString(data)
+        hlo_module = hlo_proto.hlo_module
+
         with my_lock:
             estimated_time = cost_model.estimate_time(hlo_module)
         return str(estimated_time)
