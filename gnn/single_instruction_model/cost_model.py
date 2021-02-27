@@ -25,6 +25,13 @@ class CostModel():
             except:
                 print("no saved weight")
 
+            try:
+                self.records = load("single_records")
+                info("load saved records")
+            except:
+                info("no saved records")
+                self.records = []
+
     def estimate_instruction_time(self,instruction):
         opcode = instruction.opcode
         shape = instruction.shape
@@ -54,8 +61,22 @@ class CostModel():
         estimate_time = tf.math.reduce_mean(estimate_time).numpy()
         return estimate_time
 
+    def acquire_gnn_by_record(self,record):
+        instruction_feats = tf.convert_to_tensor(record["instruction_feats"], dtype=tf.float32)
+        final_feats = tf.convert_to_tensor(record["final_feats"], dtype=tf.float32)
+        instruction_edge_feats = tf.convert_to_tensor(record["instruction_edge_feats"], dtype=tf.float32)
+        to_final_edge_feats = tf.convert_to_tensor(record["to_final_edge_feats"], dtype=tf.float32)
+
+        my_input = [instruction_feats, final_feats, instruction_edge_feats, to_final_edge_feats]
+        graph = record["graph"]
+        self.model.set_graph(graph)
+        estimate_time = self.model(my_input, training=False)
+        estimate_time = tf.math.reduce_mean(estimate_time).numpy()
+        return estimate_time
+
     def estimate_time_without_gnn(self,hlo_module):
         entry_computation = None
+
         id_computation_dict = {}
         for computation in hlo_module.computations:
             if computation.id ==hlo_module.entry_computation_id:
@@ -94,4 +115,27 @@ class CostModel():
                     self.cache[str(computation)] = current_time
                     time+=current_time
         return time
+
+
+    def draw_picture(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        time_tuples = []
+        for record in self.records:
+            real_time = record["execution_time"]
+            estimate_time = self.acquire_gnn_by_record(record)
+            time_tuples.append((real_time,estimate_time))
+        time_tuples.sort(key=lambda item: item[0])
+        x = np.arange(len(time_tuples))
+        real_y = np.array([item[0] for item in time_tuples ])
+        estimated_y = np.array([item[1] for item in time_tuples ])
+        plt.plot(x, real_y,color="r",label="real execution time")
+        plt.plot(x, estimated_y,color="b",label="estimated time")
+        plt.savefig("estimate.png")
+
+
+
+
+
+
 
