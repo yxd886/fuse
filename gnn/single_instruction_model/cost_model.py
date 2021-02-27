@@ -37,6 +37,7 @@ class CostModel():
             except:
                 self.tests = get_test_single_data()
                 info("no saved tests")
+                save(self.tests,"single_tests")
 
     def estimate_instruction_time(self,instruction):
         opcode = instruction.opcode
