@@ -4,7 +4,7 @@ sys.path.append("../")
 sys.path.append("../../")
 
 import tensorflow as tf
-from single_data import get_cost_model,gen_single_computation_data
+from single_data import get_cost_model,gen_single_computation_data,get_test_single_data,get_train_single_data
 import tensorflow.compiler.xla.service.hlo_pb2 as hlo_pb2
 from single_model import SingleModel
 from utils import save, load, info
@@ -29,8 +29,14 @@ class CostModel():
                 self.records = load("single_records")
                 info("load saved records")
             except:
+                self.records = get_train_single_data()
                 info("no saved records")
-                self.records = []
+            try:
+                self.tests = load("single_tests")
+                info("load saved tests")
+            except:
+                self.tests = get_test_single_data()
+                info("no saved tests")
 
     def estimate_instruction_time(self,instruction):
         opcode = instruction.opcode
@@ -131,9 +137,22 @@ class CostModel():
         estimated_y = np.array([item[1] for item in time_tuples ])
         plt.plot(x, real_y,color="r",label="real execution time")
         plt.plot(x, estimated_y,color="b",label="estimated time")
-        plt.savefig("estimate.png")
+        plt.savefig("train_estimate.png")
 
+        plt.clf()
 
+        time_tuples = []
+        for test in self.tests:
+            real_time = test["execution_time"]
+            estimate_time = self.acquire_gnn_by_record(test)
+            time_tuples.append((real_time,estimate_time))
+        time_tuples.sort(key=lambda item: item[0])
+        x = np.arange(len(time_tuples))
+        real_y = np.array([item[0] for item in time_tuples ])
+        estimated_y = np.array([item[1] for item in time_tuples ])
+        plt.plot(x, real_y,color="r",label="real execution time")
+        plt.plot(x, estimated_y,color="b",label="estimated time")
+        plt.savefig("test_estimate.png")
 
 
 
