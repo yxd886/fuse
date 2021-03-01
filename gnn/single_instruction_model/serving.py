@@ -23,6 +23,7 @@ cost_model = CostModel()
 @app.route('/predict', methods=['POST'])
 def launch():
     if request.method == 'POST':
+        print("get request")
         data = request.get_data()
         hlo_proto = hlo_pb2.HloProto()
         hlo_proto.ParseFromString(data)
@@ -34,6 +35,7 @@ def launch():
             except Exception as err:
                 print(err)
                 estimated_time=0
+        print("send request")
         return str(estimated_time)
 
 if __name__ == '__main__':

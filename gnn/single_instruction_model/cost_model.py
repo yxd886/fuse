@@ -115,11 +115,11 @@ class CostModel():
                 time+=self.estimate_instruction_time(instruction)
             else:
                 computation = id_computation_dict[instruction.called_computation_ids[0]]
-                if str(computation) in self.cache:
-                    time+=self.cache[str(computation)]
+                if str(computation.instructions) in self.cache:
+                    time+=self.cache[str(computation.instructions)]
                 else:
                     current_time = self.acquire_gnn(computation)
-                    self.cache[str(computation)] = current_time
+                    self.cache[str(computation.instructions)] = current_time
                     time+=current_time
         return time
 
