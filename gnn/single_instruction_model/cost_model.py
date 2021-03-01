@@ -98,7 +98,11 @@ class CostModel():
                 all_reduce_time+=self.name_time_dict[instruction.name]
         return time,all_reduce_time
 
-
+    def get_fuse_key(self,fuse_computation):
+        key = []
+        for instruction in fuse_computation.instructions:
+            key.append((instruction.opcode,instruction.shape))
+        return str(key)
 
     def estimate_time(self,hlo_module):
         entry_computation = None
@@ -115,11 +119,12 @@ class CostModel():
                 time+=self.estimate_instruction_time(instruction)
             else:
                 computation = id_computation_dict[instruction.called_computation_ids[0]]
-                if str(computation.instructions) in self.cache:
-                    time+=self.cache[str(computation.instructions)]
+                key = self.get_fuse_key(computation)
+                if key in self.cache:
+                    time+=self.cache[key]
                 else:
                     current_time = self.acquire_gnn(computation)
-                    self.cache[str(computation.instructions)] = current_time
+                    self.cache[key] = current_time
                     time+=current_time
         return time
 
