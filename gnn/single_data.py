@@ -188,31 +188,26 @@ def one_hot_opcode(opcode):
 
 
 def get_train_single_data():
-    path_base = "/home/net/xiaodong/trax/trax/hlo_module/{}/{}_op_fusion_level_{}_tensor_fusion_threshold_{}/{}"
 
-    module_name = "training.module_0061.profile_hlo_module.hlo.pb"
-    profiler_name = "hlo_execution_profile_data_61"
+    module_name = "training.hlo.pb"
+    profiler_name = "training_hlo_execution_profile_data"
     worker_num  = 6
     model_name = "transformer"
-    op_levels  = [1111]
-    tensor_thresholds = [0]
     training_datas = []
-    for op_level in op_levels:
-        for tensor_threshold in tensor_thresholds:
-            hlo_module_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,module_name)
-            profiler_path = path_base.format(worker_num,model_name,op_level,tensor_threshold,profiler_name)
 
-            if os.path.exists(hlo_module_path) and os.path.exists(profiler_path):
-                with open(profiler_path, "rb") as f:
-                    profiledata = profiler_pb2.HloExecutionProfileData()
-                    profiledata.ParseFromString(f.read())
-                with open(hlo_module_path, "rb") as f:
-                    hlo_proto = hlo_pb2.HloProto()
-                    hlo_proto.ParseFromString(f.read())
-                    hlo_module = hlo_proto.hlo_module
-                res = gen_data_from_hlo_def(hlo_module,profiledata)
+    hlo_module_path = module_name
+    profiler_path = profiler_name
 
-                training_datas.extend(res)
+    if os.path.exists(hlo_module_path) and os.path.exists(profiler_path):
+        with open(profiler_path, "rb") as f:
+            profiledata = profiler_pb2.HloExecutionProfileData()
+            profiledata.ParseFromString(f.read())
+        with open(hlo_module_path, "rb") as f:
+            hlo_proto = hlo_pb2.HloProto()
+            hlo_proto.ParseFromString(f.read())
+            hlo_module = hlo_proto.hlo_module
+        res = gen_data_from_hlo_def(hlo_module,profiledata)
+        training_datas.extend(res)
     print("training data length:",len(training_datas))
 
     return training_datas
@@ -221,37 +216,5 @@ def get_train_single_data():
 
 
 def get_test_single_data():
-    path_base = "2_0/{}"
-
-    module_name = "training.module_0061.profile_hlo_module.hlo.pb"
-    profiler_name = "hlo_execution_profile_data_61"
-    worker_num  = 6
-    model_name = "transformer"
-    op_levels  = [1111]
-    tensor_thresholds = [0]
-    training_datas = []
-    for op_level in op_levels:
-        for tensor_threshold in tensor_thresholds:
-            hlo_module_path = path_base.format(module_name)
-            profiler_path = path_base.format(profiler_name)
-
-            if os.path.exists(hlo_module_path) and os.path.exists(profiler_path):
-                with open(profiler_path, "rb") as f:
-                    profiledata = profiler_pb2.HloExecutionProfileData()
-                    profiledata.ParseFromString(f.read())
-                with open(hlo_module_path, "rb") as f:
-                    hlo_proto = hlo_pb2.HloProto()
-                    hlo_proto.ParseFromString(f.read())
-                    hlo_module = hlo_proto.hlo_module
-                res = gen_data_from_hlo_def(hlo_module,profiledata)
-
-                training_datas.extend(res)
-    print("testing data length:",len(training_datas))
-    counter=0
-    for item in training_datas:
-        if item["execution_time"]==0:
-            counter+=1
-    print("testing data zero length:",counter)
-
-    return training_datas
+    return get_train_single_data()
 
