@@ -33,6 +33,7 @@ def launch():
             try:
                 estimated_time = cost_model.estimate_time(hlo_module)
             except Exception as err:
+                print("something error")
                 print(err)
                 estimated_time=0
         print("send request")
