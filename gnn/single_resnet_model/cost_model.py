@@ -42,7 +42,7 @@ class CostModel():
     def estimate_instruction_time(self,instruction):
         opcode = instruction.opcode
         shape = instruction.shape
-        return self.tuple_time_dict[(opcode,str(shape))]
+        return self.tuple_time_dict.get((opcode,str(shape)),0)
 
 
     def test_accuracy(self):
