@@ -85,7 +85,7 @@ def gen_single_computation_data(computation_def,exe_time):
 
 
 
-def get_cost_model(profiler_path="hlo_execution_profile_data_61",hlo_module_path="training.module_0061.profile_hlo_module.hlo.pb"):
+def get_cost_model(profiler_path="training_hlo_execution_profile_data",hlo_module_path="training.hlo.pb"):
 
 
     if os.path.exists(hlo_module_path) and os.path.exists(profiler_path):
