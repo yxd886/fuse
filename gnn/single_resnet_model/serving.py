@@ -3,6 +3,7 @@ import json
 import base64
 import numpy as np
 import sys
+import traceback
 
 sys.path.append("../")
 sys.path.append("../../")
@@ -34,7 +35,7 @@ def launch():
                 estimated_time = cost_model.estimate_time(hlo_module)
             except Exception as err:
                 print("something error")
-                print(err)
+                traceback.print_exc()
                 estimated_time=0
         print("send request")
         return str(estimated_time)
