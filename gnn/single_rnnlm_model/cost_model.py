@@ -12,7 +12,7 @@ from utils import save, load, info
 
 
 class CostModel():
-    def __init__(self,profiler_path="hlo_execution_profile_data_61",hlo_module_path="training.module_0061.profile_hlo_module.hlo.pb"):
+    def __init__(self,profiler_path="training_hlo_execution_profile_data",hlo_module_path="training.hlo.pb"):
         self.name_time_dict,self.tuple_time_dict,self.init_hlo_module = get_cost_model(profiler_path,hlo_module_path)
 
         self.cache = {}
