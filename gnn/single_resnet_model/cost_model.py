@@ -42,7 +42,10 @@ class CostModel():
     def estimate_instruction_time(self,instruction):
         opcode = instruction.opcode
         shape = instruction.shape
-        return self.tuple_time_dict.get((opcode,str(shape)),0)
+        if  (opcode,str(shape)) not in self.tuple_time_dict:
+            print((opcode,str(shape)))
+            return 0
+        return self.tuple_time_dict[(opcode,str(shape))]
 
 
     def test_accuracy(self):
