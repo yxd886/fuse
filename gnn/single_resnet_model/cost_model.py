@@ -117,9 +117,14 @@ class CostModel():
         assert (entry_computation)
 
         time = 0
+        all_reduce_time = 0
+
         for instruction in entry_computation.instructions:
             if instruction.opcode!="fusion":
-                time+=self.estimate_instruction_time(instruction)
+                instruction_time = self.estimate_instruction_time(instruction)
+                time+=instruction_time
+                if instruction.opcode == "all-reduce":
+                    all_reduce_time += instruction_time
             else:
                 computation = id_computation_dict[instruction.called_computation_ids[0]]
                 key = self.get_fuse_key(computation)
@@ -129,6 +134,7 @@ class CostModel():
                     current_time = self.acquire_gnn(computation)
                     self.cache[key] = current_time
                     time+=current_time
+        print("total time:",time, "all-reduce time:",all_reduce_time)
         return time
 
 
