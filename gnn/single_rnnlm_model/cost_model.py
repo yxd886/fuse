@@ -117,12 +117,12 @@ class CostModel():
         fused_counter = 0
         for instruction in entry_computation.instructions:
             if instruction.opcode!="fusion":
-                fused_counter = fused_counter+1
                 instruction_time = self.estimate_instruction_time(instruction)
                 time+=instruction_time
                 if instruction.opcode == "all-reduce":
                     all_reduce_time += instruction_time
             else:
+                fused_counter = fused_counter+1
                 computation = id_computation_dict[instruction.called_computation_ids[0]]
                 key = self.get_fuse_key(computation)
                 if key in self.cache:
