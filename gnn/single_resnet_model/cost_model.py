@@ -44,7 +44,10 @@ class CostModel():
         shape = instruction.shape
         if  (opcode,str(shape)) not in self.tuple_time_dict:
             print((opcode,str(shape)))
-            return 0
+            if instruction.name not in self.name_time_dict:
+                return 0
+            else:
+                return self.name_time_dict[instruction.name]
         return self.tuple_time_dict[(opcode,str(shape))]
 
 
