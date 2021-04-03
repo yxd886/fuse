@@ -87,6 +87,15 @@ def gen_single_computation_data(computation_def,exe_time):
 
 def get_cost_model(profiler_path="training_hlo_execution_profile_data",hlo_module_path="training.hlo.pb"):
 
+    try:
+        cost_model = load("cost_model.pkl")
+    except:
+        cost_model = {}
+        cost_model["InstructionName_Time_Dict"] = {}
+        cost_model["InstructionName_Time_Dict"] = {}
+    InstructionName_Time_Dict = cost_model["InstructionName_Time_Dict"]
+    Tuple_Time_Dict = cost_model["InstructionName_Time_Dict"]
+
 
     if os.path.exists(hlo_module_path) and os.path.exists(profiler_path):
         with open(profiler_path, "rb") as f:
@@ -102,8 +111,7 @@ def get_cost_model(profiler_path="training_hlo_execution_profile_data",hlo_modul
         for instruction in computation.instructions:
             Name_Instruction_Dict[instruction.name] = instruction
 
-    InstructionName_Time_Dict = {}
-    Tuple_Time_Dict = {}
+
 
     printer_data = profile_def.printer_data
     profiler_counters =profile_def.profile_counters
@@ -120,8 +128,7 @@ def get_cost_model(profiler_path="training_hlo_execution_profile_data",hlo_modul
             shape =get_shape_string(instruction)
             Tuple_Time_Dict[(opcode,shape)] = exe_time
 
-
-
+    save(cost_model,"cost_model.pkl")
     return InstructionName_Time_Dict,Tuple_Time_Dict,hlo_module
 
 
