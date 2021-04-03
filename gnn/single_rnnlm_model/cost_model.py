@@ -103,11 +103,12 @@ class CostModel():
         time = 0
         all_reduce_time = 0
         for instruction in entry_computation.instructions:
-            time+=self.name_time_dict[instruction.name]
+            time+=self.estimate_instruction_time(instruction)
             if instruction.opcode=="all-reduce":
-                all_reduce_time+=self.name_time_dict[instruction.name]
+                all_reduce_time+=self.estimate_instruction_time(instruction)
         return time,all_reduce_time
 
+    
     def get_fuse_key(self,fuse_computation):
         key = []
         for instruction in fuse_computation.instructions:
