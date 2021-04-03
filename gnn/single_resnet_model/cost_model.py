@@ -60,7 +60,7 @@ class CostModel():
         estimated_time = self.estimate_time(hlo_model)
         print("estimated_time withgnn:",estimated_time)
 
-        estimated_time,all_reduce_time = self.estimate_time_without_gnn(self.init_hlo_module)
+        estimated_time,all_reduce_time = self.estimate_time_without_gnn(hlo_model)
         print("estimated_time without gnn:",estimated_time)
         print("all-reduce_time without gnn:",all_reduce_time)
 

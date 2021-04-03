@@ -48,11 +48,18 @@ class CostModel():
         return self.tuple_time_dict[(opcode,str(shape))]
 
 
-    def test_accuracy(self):
-        estimated_time = self.estimate_time(self.init_hlo_module)
+    def test_accuracy(self,hlo_model=None):
+        if hlo_model==None:
+            hlo_model = self.init_hlo_module
+        else:
+            with open(hlo_model, "rb") as f:
+                hlo_proto = hlo_pb2.HloProto()
+                hlo_proto.ParseFromString(f.read())
+                hlo_model = hlo_proto.hlo_module
+        estimated_time = self.estimate_time(hlo_model)
         print("estimated_time withgnn:",estimated_time)
 
-        estimated_time,all_reduce_time = self.estimate_time_without_gnn(self.init_hlo_module)
+        estimated_time,all_reduce_time = self.estimate_time_without_gnn(hlo_model)
         print("estimated_time without gnn:",estimated_time)
         print("all-reduce_time without gnn:",all_reduce_time)
 
