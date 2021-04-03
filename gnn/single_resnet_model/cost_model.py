@@ -55,7 +55,7 @@ class CostModel():
             with open(hlo_model, "rb") as f:
                 hlo_proto = hlo_pb2.HloProto()
                 hlo_proto.ParseFromString(f.read())
-                hlo_module = hlo_proto.hlo_module
+                hlo_model = hlo_proto.hlo_module
         estimated_time = self.estimate_time(hlo_model)
         print("estimated_time withgnn:",estimated_time)
 
