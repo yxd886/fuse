@@ -8,7 +8,7 @@ from single_data import get_cost_model,gen_single_computation_data,get_test_sing
 import tensorflow.compiler.xla.service.hlo_pb2 as hlo_pb2
 from single_model import SingleModel
 from utils import save, load, info
-
+import copy
 
 
 class CostModel():
@@ -46,6 +46,7 @@ class CostModel():
             print((opcode,str(shape)))
             return self.name_time_dict[instruction.name]
         return self.tuple_time_dict[(opcode,str(shape))]
+
 
 
     def test_accuracy(self,hlo_model=None):
@@ -108,13 +109,29 @@ class CostModel():
                 all_reduce_time+=self.estimate_instruction_time(instruction)
         return time,all_reduce_time
 
-    
     def get_fuse_key(self,fuse_computation):
         key = []
         for instruction in fuse_computation.instructions:
             key.append((instruction.opcode,instruction.shape))
         return str(key)
-    def estimate_time(self,hlo_module):
+
+
+    def estimate_single_instruction(self,id_computation_dict,instruction):
+        if instruction.opcode != "fusion":
+            instruction_time = self.estimate_instruction_time(instruction)
+            return instruction_time
+        else:
+            computation = id_computation_dict[instruction.called_computation_ids[0]]
+            key = self.get_fuse_key(computation)
+            if key in self.cache:
+                return self.cache[key]
+            else:
+                current_time = self.acquire_gnn(computation)
+                self.cache[key] = current_time
+                return current_time
+
+
+    def estimate_time(self,hlo_module,overlap=True):
         entry_computation = None
         id_computation_dict = {}
         for computation in hlo_module.computations:
@@ -123,30 +140,100 @@ class CostModel():
             id_computation_dict[computation.id] = computation
         assert (entry_computation)
 
-        time = 0
-        all_reduce_time = 0
-        fused_counter = 0
-        for instruction in entry_computation.instructions:
-            if instruction.opcode!="fusion":
-                instruction_time = self.estimate_instruction_time(instruction)
-                time+=instruction_time
-                if instruction.opcode == "all-reduce":
-                    all_reduce_time += instruction_time
-            else:
-                fused_counter = fused_counter+1
-                computation = id_computation_dict[instruction.called_computation_ids[0]]
-                key = self.get_fuse_key(computation)
-                if key in self.cache:
-                    time+=self.cache[key]
+        if not overlap:
+            time = 0
+            all_reduce_time = 0
+            fused_counter = 0
+            for instruction in entry_computation.instructions:
+                if instruction.opcode!="fusion":
+                    instruction_time = self.estimate_instruction_time(instruction)
+                    time+=instruction_time
+                    if instruction.opcode == "all-reduce":
+                        all_reduce_time += instruction_time
                 else:
-                    current_time = self.acquire_gnn(computation)
-                    self.cache[key] = current_time
-                    time+=current_time
-        print("total time:",time, "all-reduce time:",all_reduce_time,"fused number:",fused_counter)
-        return time
+                    fused_counter = fused_counter+1
+                    computation = id_computation_dict[instruction.called_computation_ids[0]]
+                    key = self.get_fuse_key(computation)
+                    if key in self.cache:
+                        time+=self.cache[key]
+                    else:
+                        current_time = self.acquire_gnn(computation)
+                        self.cache[key] = current_time
+                        time+=current_time
+            print("total time:",time, "all-reduce time:",all_reduce_time,"fused number:",fused_counter)
+            return time
+        if overlap:
+            unexecuted_instructions = list(entry_computation.instructions)
+            executed_instructon_ids = []
+            id_time_dict = {}
+            instruction_timeline=0
+            allreduce_timeline=0
 
+            all_reduce_time = 0
+            computation_time = 0
+
+            while len(unexecuted_instructions)>0:
+                current_instruction = unexecuted_instructions[0]
+                operand_ids = current_instruction.operand_ids
+                if self.no_dependency(operand_ids,executed_instructon_ids):
+                    #compute start time
+                    duration = self.estimate_single_instruction(id_computation_dict,current_instruction)
+                    if current_instruction.opcode!="all-reduce":
+                        computation_time+=duration
+                        if len(operand_ids)==0:
+                            id_time_dict[current_instruction.id] = {}
+                            id_time_dict[current_instruction.id]["start_time"] = instruction_timeline
+                            id_time_dict[current_instruction.id]["end_time"] = instruction_timeline+duration
+                            id_time_dict[current_instruction.id]["duration"] = duration
+                            instruction_timeline +=duration
+                        else:
+                            end_times = []
+                            for id in operand_ids:
+                                end_times.append(id_time_dict[id]["end_time"])
+                            max_end_time = max(end_times)
+                            earlist_start_time = max([max_end_time,instruction_timeline])
+                            id_time_dict[current_instruction.id] = {}
+                            id_time_dict[current_instruction.id]["start_time"] = earlist_start_time
+                            id_time_dict[current_instruction.id]["end_time"] = earlist_start_time+duration
+                            id_time_dict[current_instruction.id]["duration"] = duration
+                            instruction_timeline =earlist_start_time+duration
+                    else:
+                        all_reduce_time+=duration
+                        end_times = []
+                        for id in operand_ids:
+                            end_times.append(id_time_dict[id]["end_time"])
+                        max_end_time = max(end_times)
+                        earlist_start_time = max([max_end_time, allreduce_timeline])
+                        id_time_dict[current_instruction.id] = {}
+                        id_time_dict[current_instruction.id]["start_time"] = earlist_start_time
+                        id_time_dict[current_instruction.id]["end_time"] = earlist_start_time + duration
+                        id_time_dict[current_instruction.id]["duration"] = duration
+                        allreduce_timeline = earlist_start_time + duration
+
+                    unexecuted_instructions.remove(unexecuted_instructions[0])
+                    executed_instructon_ids.append(current_instruction.id)
+
+                else:
+
+                    unexecuted_instructions.insert(2,copy.deepcopy(current_instruction))
+                    unexecuted_instructions.remove(unexecuted_instructions[0])
+            print("total time:",max([instruction_timeline,allreduce_timeline]), "all-reduce-timeline:",allreduce_timeline,"computation_timeline:",instruction_timeline,"all-reduce-aggregated-time:",all_reduce_time,"computation-aggregated-time:",computation_time)
+
+            return max([instruction_timeline,allreduce_timeline])
+
+
+
+
+
+    def no_dependency(self,operand_ids,executed_instruction_ids):
+        for id in operand_ids:
+            if id not in executed_instruction_ids:
+                return False
+        return True
 
     def draw_picture(self):
+        import matplotlib
+        matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         import numpy as np
         time_tuples = []
