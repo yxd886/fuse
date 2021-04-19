@@ -174,7 +174,7 @@ class CostModel():
 
             while len(unexecuted_instructions)>0:
                 current_instruction = unexecuted_instructions[0]
-                operand_ids = current_instruction.operands
+                operand_ids = current_instruction.operand_ids
                 if self.no_dependency(operand_ids,executed_instructon_ids):
                     #compute start time
                     duration = self.estimate_single_instruction(id_computation_dict,current_instruction)
@@ -211,6 +211,8 @@ class CostModel():
                         allreduce_timeline = earlist_start_time + duration
 
                     unexecuted_instructions.remove(unexecuted_instructions[0])
+                    executed_instructon_ids.append(current_instruction.id)
+
                 else:
 
                     unexecuted_instructions.insert(2,copy.deepcopy(current_instruction))
