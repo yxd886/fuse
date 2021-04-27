@@ -232,37 +232,57 @@ class CostModel():
         return True
 
     def draw_picture(self):
-        import matplotlib
-        matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         import numpy as np
         time_tuples = []
+        f_size=22
         for record in self.records:
             real_time = record["execution_time"]
             estimate_time = self.acquire_gnn_by_record(record)
-            time_tuples.append((real_time,estimate_time))
+            time_tuples.append((real_time, estimate_time))
         time_tuples.sort(key=lambda item: item[0])
         x = np.arange(len(time_tuples))
-        real_y = np.array([item[0] for item in time_tuples ])
-        estimated_y = np.array([item[1] for item in time_tuples ])
-        plt.plot(x, real_y,color="r",label="real execution time")
-        plt.plot(x, estimated_y,color="b",label="estimated time")
+        real_y = np.array([item[0] for item in time_tuples])
+        estimated_y = np.array([item[1] for item in time_tuples])
+        plt.plot(x, real_y, color="r", label="Real execution time")
+        plt.plot(x, estimated_y, color="b", alpha=0.5, label="Estimated time")
+        plt.legend()
+
+        '''
+        for tl in plt.get_xticklabels():
+            tl.set_fontsize(f_size-2)
+            tl.set_fontstyle('normal')
+        '''
+
+
+        plt.xlabel("Samples", fontsize=f_size+4, style='normal', color='black')
+        plt.ylabel("Execution Time (us)", fontsize=f_size - 2, style='normal',
+                      color='black')
+
+
         plt.savefig("train_estimate.png")
 
         plt.clf()
 
-        time_tuples = []
-        for test in self.tests:
-            real_time = test["execution_time"]
-            estimate_time = self.acquire_gnn_by_record(test)
-            time_tuples.append((real_time,estimate_time))
-        time_tuples.sort(key=lambda item: item[0])
-        x = np.arange(len(time_tuples))
-        real_y = np.array([item[0] for item in time_tuples ])
-        estimated_y = np.array([item[1] for item in time_tuples ])
-        plt.plot(x, real_y,color="r",label="real execution time")
-        plt.plot(x, estimated_y,color="b",label="estimated time")
-        plt.savefig("test_estimate.png")
+        error = np.array([np.abs(item[1] - item[0]) / item[0] for item in time_tuples])
+        count, bins_count = np.histogram(error, bins=100)
+        pdf = count / sum(count)
+        cdf = np.cumsum(pdf)
+        plt.plot(bins_count[1:], pdf, color="red", label="PDF")
+        plt.plot(bins_count[1:], cdf, label="CDF")
+        plt.legend()
+
+        '''
+        for tl in plt.get_xticklabels():
+            tl.set_fontsize(f_size-2)
+            tl.set_fontstyle('normal')
+        '''
+
+        plt.xlabel("Error ratio", fontsize=f_size+4, style='normal', color='black')
+        #plt.ylabel("                        Per-step Execution Time (s)", fontsize=f_size - 2, style='normal',
+        #              color='black')
+        plt.savefig("pdf_cdf.png")
+
 
 
 

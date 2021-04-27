@@ -151,20 +151,19 @@ class CostModel():
         real_y = np.array([item[0] for item in time_tuples ])
         estimated_y = np.array([item[1] for item in time_tuples ])
         plt.plot(x, real_y,color="r",label="real execution time")
-        plt.plot(x, estimated_y,color="b",label="estimated time")
+        plt.plot(x, estimated_y,color="b",alpha = 0.5,label="estimated time")
+        plt.legend()
         plt.savefig("train_estimate.png")
 
         plt.clf()
 
-        time_tuples = []
-        for test in self.tests:
-            real_time = test["execution_time"]
-            estimate_time = self.acquire_gnn_by_record(test)
-            time_tuples.append((real_time,estimate_time))
-        time_tuples.sort(key=lambda item: item[0])
-        x = np.arange(len(time_tuples))
-        real_y = np.array([item[0] for item in time_tuples ])
-        estimated_y = np.array([item[1] for item in time_tuples ])
+        error = np.array([np.abs(item[1]-item[0])/item[0] for item in time_tuples ])
+        count, bins_count = np.histogram(error, bins=100)
+        pdf = count / sum(count)
+        cdf = np.cumsum(pdf)
+        plt.plot(bins_count[1:], pdf, color="red", label="PDF")
+        plt.plot(bins_count[1:], cdf, label="CDF")
+        plt.legend()
         plt.plot(x, real_y,color="r",label="real execution time")
         plt.plot(x, estimated_y,color="b",label="estimated time")
         plt.savefig("test_estimate.png")
