@@ -246,7 +246,6 @@ class CostModel():
         with open("time_data.pkl","wb") as f:
             pkl.dump(time_tuples,f)
 
-        pkl.dump()
         x = np.arange(len(time_tuples))
         real_y = np.array([item[0] for item in time_tuples])
         estimated_y = np.array([item[1] for item in time_tuples])
