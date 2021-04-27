@@ -234,6 +234,7 @@ class CostModel():
     def draw_picture(self):
         import matplotlib.pyplot as plt
         import numpy as np
+        import pickle as pkl
         time_tuples = []
         f_size=22
         for record in self.records:
@@ -241,6 +242,11 @@ class CostModel():
             estimate_time = self.acquire_gnn_by_record(record)
             time_tuples.append((real_time, estimate_time))
         time_tuples.sort(key=lambda item: item[0])
+
+        with open("time_data.pkl","wb") as f:
+            pkl.dump(time_tuples,f)
+
+        pkl.dump()
         x = np.arange(len(time_tuples))
         real_y = np.array([item[0] for item in time_tuples])
         estimated_y = np.array([item[1] for item in time_tuples])
@@ -262,6 +268,8 @@ class CostModel():
 
         plt.savefig("train_estimate.png")
 
+
+
         plt.clf()
 
         error = np.array([np.abs(item[1] - item[0]) / item[0] for item in time_tuples])
@@ -281,7 +289,7 @@ class CostModel():
         plt.xlabel("Error ratio", fontsize=f_size+4, style='normal', color='black')
         #plt.ylabel("                        Per-step Execution Time (s)", fontsize=f_size - 2, style='normal',
         #              color='black')
-        plt.savefig("pdf_cdf.png")
+        plt.savefig("pdf_cdfg.png")
 
 
 
