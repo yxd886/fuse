@@ -265,7 +265,7 @@ class CostModel():
                       color='black')
 
 
-        plt.savefig("train_estimate.png")
+        plt.savefig("train_estimate.pdf")
 
 
 
@@ -288,7 +288,7 @@ class CostModel():
         plt.xlabel("Error ratio", fontsize=f_size+4, style='normal', color='black')
         #plt.ylabel("                        Per-step Execution Time (s)", fontsize=f_size - 2, style='normal',
         #              color='black')
-        plt.savefig("pdf_cdfg.png")
+        plt.savefig("pdf_cdfg.pdf")
 
 
 
